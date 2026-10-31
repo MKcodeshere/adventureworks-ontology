@@ -5,6 +5,8 @@ __pycache__/
 venv/
 eval/last_run.json
 eval/charts/*.png
+!eval/charts/model_comparison.png
+!eval/charts/model_comparison_by_tag.png
 artifacts/schema_profile.json.bak
 .DS_Store
 *.log
