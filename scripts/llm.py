@@ -70,17 +70,35 @@ def _post(url: str, payload: dict, headers: dict) -> dict:
         raise LLMError(f"request failed: {e}") from e
 
 def _ollama(prompt, system, temperature):
+    """Local Ollama or Ollama Cloud.
+
+    Local:  OLLAMA_HOST=http://127.0.0.1:11434 (default), no key.
+    Cloud:  OLLAMA_HOST=https://ollama.com and OLLAMA_API_KEY=... (Bearer).
+    """
     host = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434").rstrip("/")
     model = os.environ.get("OLLAMA_MODEL", "qwen2.5-coder:3b")
     messages = []
     if system:
         messages.append({"role": "system", "content": system})
     messages.append({"role": "user", "content": prompt})
-    out = _post(f"{host}/api/chat", {
-        "model": model, "messages": messages, "stream": False,
+    headers = {}
+    api_key = os.environ.get("OLLAMA_API_KEY", "").strip()
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+    payload = {
+        "model": model,
+        "messages": messages,
+        "stream": False,
         "options": {"temperature": temperature},
-    }, {})
-    return out["message"]["content"]
+    }
+    out = _post(f"{host}/api/chat", payload, headers)
+    msg = out.get("message") or {}
+    content = msg.get("content") or ""
+    # Some cloud reasoning models put scratchpad in `thinking` / `reasoning`.
+    # Prefer content; callers may strip leftover fences.
+    if not content and msg.get("thinking"):
+        content = msg.get("thinking")
+    return content
 
 def _gemini(prompt, system, temperature):
     key = os.environ["GEMINI_API_KEY"]

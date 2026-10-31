@@ -1,0 +1,6 @@
+{
+  "model": "gemini-2.5-flash",
+  "provider": "gemini",
+  "temperature": 0,
+  "retrieval": "v1_generic"
+}

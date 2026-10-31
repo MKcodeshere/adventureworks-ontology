@@ -112,16 +112,37 @@ Charts are generated only from a real run. No placeholder numbers.
 
 ## LLM providers
 
-Set in `.env`:
+Set in `.env` (never commit keys):
 
 | LLM_PROVIDER | What you need |
 |--------------|---------------|
-| `ollama` | Local Ollama, default model `qwen2.5-coder:3b` |
-| `gemini` | `GEMINI_API_KEY` |
+| `ollama` | Local Ollama **or** [Ollama Cloud](https://ollama.com) |
+| `gemini` | `GEMINI_API_KEY` + `GEMINI_MODEL` (e.g. `gemini-2.5-flash`) |
 | `openai` | `OPENAI_API_KEY` |
 | `anthropic` | `ANTHROPIC_API_KEY` |
 
+### Ollama local
+
+```bash
+LLM_PROVIDER=ollama
+OLLAMA_HOST=http://127.0.0.1:11434
+OLLAMA_MODEL=qwen2.5-coder:3b
+```
+
+### Ollama Cloud
+
+```bash
+LLM_PROVIDER=ollama
+OLLAMA_HOST=https://ollama.com
+OLLAMA_API_KEY=...          # Bearer token; keep out of git
+OLLAMA_MODEL=gpt-oss:120b   # cloud API name (CLI may show gpt-oss:120b-cloud)
+```
+
 The code path is the same for every provider. Swap the key, keep the ontology.
+
+Eval archives live under `eval/runs/v1_<model>/`. After each full run,
+`eval/report.md` aggregates all v1 models and writes comparison charts.
+
 
 ## The 30 questions (summary)
 

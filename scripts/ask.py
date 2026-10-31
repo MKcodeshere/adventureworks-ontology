@@ -22,7 +22,10 @@ def load_dotenv():
         if not line or line.startswith("#") or "=" not in line:
             continue
         k, v = line.split("=", 1)
-        os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+        k, v = k.strip(), v.strip().strip('"').strip("'")
+        # Overwrite DATABASE_URL always so an unquoted `source .env` can't leave a truncated DSN.
+        if k == "DATABASE_URL" or not os.environ.get(k):
+            os.environ[k] = v
 
 load_dotenv()
 DSN = os.environ.get(
@@ -306,15 +309,28 @@ def schema_hints(tables: set[str] | None, limit_tables: int = 12) -> str:
     return "\n".join(lines) + ("\nJOINS:\n" + "\n".join(jlines[:30]) if jlines else "")
 
 def extract_sql(text: str) -> str:
-    m = re.search(r"```sql\s*(.*?)```", text, re.I | re.S)
+    """Pull SQL from model output; strip thinking/reasoning scratchpads."""
+    if not text:
+        raise ValueError("Empty model output")
+    cleaned = text
+    cleaned = re.sub(r"<think>.*?</think>", " ", cleaned, flags=re.I | re.S)
+    cleaned = re.sub(r"<thinking>.*?</thinking>", " ", cleaned, flags=re.I | re.S)
+    cleaned = re.sub(r"<reasoning>.*?</reasoning>", " ", cleaned, flags=re.I | re.S)
+    cleaned = re.sub(r"```thinking.*?```", " ", cleaned, flags=re.I | re.S)
+    cleaned = re.sub(r"```reasoning.*?```", " ", cleaned, flags=re.I | re.S)
+
+    m = re.search(r"```sql\s*(.*?)```", cleaned, re.I | re.S)
     if m:
         return m.group(1).strip().rstrip(";")
-    m = re.search(r"```\s*(SELECT.*)```", text, re.I | re.S)
+    m = re.search(r"```\s*(SELECT.*)```", cleaned, re.I | re.S)
     if m:
         return m.group(1).strip().rstrip(";")
-    m = re.search(r"(SELECT\b.*)", text, re.I | re.S)
-    if m:
-        return m.group(1).strip().rstrip(";")
+    selects = list(re.finditer(r"(SELECT\b.*?)(?:;|\Z)", cleaned, re.I | re.S))
+    if selects:
+        return selects[-1].group(1).strip().rstrip(";")
+    selects = list(re.finditer(r"(SELECT\b.*?)(?:;|\Z)", text, re.I | re.S))
+    if selects:
+        return selects[-1].group(1).strip().rstrip(";")
     raise ValueError("No SQL found in model output")
 
 def run_sql(sql: str):
