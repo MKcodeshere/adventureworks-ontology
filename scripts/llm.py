@@ -36,7 +36,7 @@ def complete(prompt: str, system: str | None = None, temperature: float = 0.0) -
         return _with_retry(lambda: _anthropic(prompt, system, temperature))
     raise LLMError(f"Unknown LLM_PROVIDER={provider}")
 
-def _with_retry(fn, attempts: int = 8):
+def _with_retry(fn, attempts: int = 3):
     delay = 2.0
     last = None
     for i in range(attempts):
@@ -59,7 +59,7 @@ def _post(url: str, payload: dict, headers: dict) -> dict:
     data = json.dumps(payload).encode()
     req = urllib.request.Request(url, data=data, headers={**headers, "Content-Type": "application/json"})
     try:
-        with urllib.request.urlopen(req, timeout=180) as resp:
+        with urllib.request.urlopen(req, timeout=120) as resp:
             return json.loads(resp.read().decode())
     except urllib.error.HTTPError as e:
         body = e.read().decode(errors="replace")

@@ -1,0 +1,6 @@
+{
+  "model": "nemotron-3-super",
+  "provider": "ollama",
+  "temperature": 0,
+  "retrieval": "v1_generic"
+}

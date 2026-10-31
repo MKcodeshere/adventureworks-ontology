@@ -14,6 +14,14 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 ROOT = Path(__file__).resolve().parents[1]
+
+# Preferred chart/report order. Size labels only when verified.
+MODEL_ORDER = ["gemini-2.5-flash", "gpt-oss:120b", "nemotron-3-super"]
+MODEL_DISPLAY = {
+    # gpt-oss size is in the model id; nemotron-3-super = 120B MoE / 12B active
+    # per https://ollama.com/library/nemotron-3-super. Gemini: no public size.
+    "nemotron-3-super": "nemotron-3-super (120B)",
+}
 sys.path.insert(0, str(ROOT / "scripts"))
 from ask import ask, extract_sql, run_sql, DSN  # noqa: E402
 from llm import LLMError  # noqa: E402
@@ -301,11 +309,11 @@ def write_report(all_rows, path: Path, model: str | None = None):
     print(f"Wrote {path}")
 
 def load_v1_model_runs() -> dict[str, list]:
-    """Load archived v1_* model runs: {model_label: rows}."""
+    """Load archived v1_* model runs: {display_label: rows}, preferred order."""
     runs_dir = ROOT / "eval" / "runs"
-    out = {}
+    by_model = {}
     if not runs_dir.exists():
-        return out
+        return {}
     for d in sorted(runs_dir.iterdir()):
         if not d.is_dir() or not d.name.startswith("v1_"):
             continue
@@ -313,14 +321,19 @@ def load_v1_model_runs() -> dict[str, list]:
         if not lr.exists():
             continue
         rows = json.loads(lr.read_text())
-        # Prefer README / meta model, else folder name after v1_
         meta = d / "meta.json"
         if meta.exists():
             label = json.loads(meta.read_text()).get("model") or d.name[len("v1_"):]
         else:
             label = d.name[len("v1_"):]
-        out[label] = rows
-    return out
+        by_model[label] = rows
+    ordered = {}
+    for key in MODEL_ORDER:
+        if key in by_model:
+            ordered[MODEL_DISPLAY.get(key, key)] = by_model.pop(key)
+    for key, rows in by_model.items():
+        ordered[MODEL_DISPLAY.get(key, key)] = rows
+    return ordered
 
 def write_model_comparison_charts(model_runs: dict[str, list], out_dir: Path):
     import matplotlib
@@ -392,6 +405,13 @@ def write_aggregate_report(model_runs: dict[str, list], path: Path):
     lines.append("Temperature: `0`. Retrieval: v1 generic ontology retrieval. "
                  "Comparator: `eval/COMPARISON.md`.\n")
     lines.append("## Models\n")
+    lines.append(
+        "Parameter sizes labelled only when verified: `gpt-oss:120b` (120B); "
+        "`nemotron-3-super` is 120B total / 12B active MoE per "
+        "[ollama.com/library/nemotron-3-super]"
+        "(https://ollama.com/library/nemotron-3-super). "
+        "Gemini has no public parameter count.\n"
+    )
     lines.append("| Model | Baseline | Ontology | Delta |")
     lines.append("|-------|----------|----------|-------|")
     for model, rows in model_runs.items():
@@ -433,6 +453,11 @@ def write_aggregate_report(model_runs: dict[str, list], path: Path):
     lines.append("\n## Charts\n")
     lines.append("- `eval/charts/model_comparison.png`")
     lines.append("- `eval/charts/model_comparison_by_tag.png`")
+    lines.append(
+        "- Default single-model charts (`overall_accuracy.png`, "
+        "`accuracy_by_difficulty.png`, `accuracy_by_tag.png`) are from "
+        "`gemini-2.5-flash` (kept as the primary reference)."
+    )
     lines.append("- Per-model charts under `eval/runs/v1_<model>/charts/`")
     lines.append("\n## Run archives\n")
     for model in model_runs:
@@ -473,6 +498,14 @@ def main():
         model_runs = load_v1_model_runs()
         write_aggregate_report(model_runs, ROOT / "eval" / "report.md")
         write_model_comparison_charts(model_runs, ROOT / "eval" / "charts")
+        gem_charts = ROOT / "eval" / "runs" / "v1_gemini-2.5-flash" / "charts"
+        if gem_charts.exists():
+            import shutil
+            for name in ("overall_accuracy.png", "accuracy_by_difficulty.png",
+                         "accuracy_by_tag.png"):
+                src = gem_charts / name
+                if src.exists():
+                    shutil.copy2(src, ROOT / "eval" / "charts" / name)
         return
 
     qs = yaml.safe_load((ROOT / "eval" / "questions.yaml").read_text())["questions"]
@@ -491,6 +524,15 @@ def main():
         model_runs = load_v1_model_runs()
         write_aggregate_report(model_runs, ROOT / "eval" / "report.md")
         write_model_comparison_charts(model_runs, ROOT / "eval" / "charts")
+        # Keep default single-model charts as Gemini reference when present.
+        gem_charts = ROOT / "eval" / "runs" / "v1_gemini-2.5-flash" / "charts"
+        if gem_charts.exists():
+            import shutil
+            for name in ("overall_accuracy.png", "accuracy_by_difficulty.png",
+                         "accuracy_by_tag.png"):
+                src = gem_charts / name
+                if src.exists():
+                    shutil.copy2(src, ROOT / "eval" / "charts" / name)
     else:
         print("Single-mode run: report/charts need both modes. Saved eval/last_run.json only.")
 
