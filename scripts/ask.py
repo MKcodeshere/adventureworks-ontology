@@ -333,18 +333,109 @@ def extract_sql(text: str) -> str:
         return selects[-1].group(1).strip().rstrip(";")
     raise ValueError("No SQL found in model output")
 
-def run_sql(sql: str):
+def assert_readonly_select(sql: str) -> str:
+    """Allow a single SELECT / WITH…SELECT. Reject anything else."""
+    cleaned = re.sub(r"/\*.*?\*/", " ", sql, flags=re.S)
+    cleaned = re.sub(r"--.*?$", " ", cleaned, flags=re.M)
+    cleaned = cleaned.strip().rstrip(";").strip()
+    if not cleaned:
+        raise ValueError("Empty SQL")
+    # reject multiple statements
+    if ";" in cleaned:
+        raise ValueError("Multiple SQL statements are not allowed")
+    low = cleaned.lower()
+    if not (low.startswith("select") or low.startswith("with")):
+        raise ValueError("Only SELECT queries are allowed")
+    banned = (
+        r"\b(insert|update|delete|drop|alter|create|truncate|grant|revoke|"
+        r"copy|call|do|execute|refresh|reindex|vacuum|analyze|comment|"
+        r"security\s+label|set\s+role|reset\s+role)\b"
+    )
+    if re.search(banned, low):
+        raise ValueError("Only read-only SELECT queries are allowed")
+    return cleaned
+
+def run_sql(sql: str, row_limit: int | None = None):
+    """Execute SQL read-only with a 15s statement_timeout.
+
+    Behaviour for valid SELECTs is unchanged for evaluate.py (no row_limit).
+    """
+    safe = assert_readonly_select(sql)
     conn = psycopg2.connect(DSN)
     try:
+        conn.set_session(readonly=True, autocommit=False)
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute(sql)
-            return [dict(r) for r in cur.fetchall()]
+            cur.execute("SET LOCAL statement_timeout = '15s'")
+            cur.execute(safe)
+            rows = cur.fetchall()
+            out = [dict(r) for r in rows]
+            if row_limit is not None:
+                return out[:row_limit]
+            return out
     finally:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
         conn.close()
 
-def ask(question: str, mode: str = "ontology") -> dict:
+def synonym_expansions(ont: dict, question: str) -> dict:
+    """Detail which synonyms_index entries fired for the question.
+
+    Does not change retrieval; mirrors _expand_question_tokens.
+    """
+    qtok = tokenize(question)
+    expanded = _expand_question_tokens(ont, qtok)
+    matches = []
+    syn = ont.get("synonyms_index") or {}
+    for k, vals in syn.items():
+        keys = tokenize(k)
+        val_toks = set()
+        for v in vals or []:
+            val_toks |= tokenize(str(v))
+        hit = (keys | val_toks) & qtok
+        if hit:
+            matches.append({
+                "key": k,
+                "values": list(vals or []),
+                "matched_tokens": sorted(hit),
+            })
+    return {
+        "question_tokens": sorted(qtok),
+        "expanded_tokens": sorted(expanded),
+        "added_tokens": sorted(expanded - qtok),
+        "synonym_hits": matches,
+    }
+
+
+def multi_hop_paths(ont: dict, seed_names: set[str]) -> list[dict]:
+    """Shortest paths (<=3 hops) between seed pairs, for UI display only."""
+    adj, _ = _build_entity_graph(ont)
+    paths = []
+    seeds = sorted(seed_names)
+    for i, a in enumerate(seeds):
+        for b in seeds[i + 1 :]:
+            path = _shortest_path(adj, a, b, max_hops=3)
+            if not path or len(path) < 2:
+                continue
+            edges = []
+            for u, v in zip(path, path[1:]):
+                for nbr, rel in adj.get(u, []):
+                    if nbr == v:
+                        edges.append({
+                            "from": u,
+                            "to": v,
+                            "name": rel.get("name"),
+                            "join": rel.get("join") or rel.get("join_hint") or rel.get("via"),
+                        })
+                        break
+            paths.append({"nodes": path, "edges": edges, "hops": len(path) - 1})
+    return paths
+
+
+def build_prompt(question: str, mode: str = "ontology") -> tuple[str, dict | None, dict]:
+    """Build the exact prompt the LLM will see. Returns (prompt, slice_or_None, meta)."""
     ont = load_ontology()
-    retrieval = None
     if mode == "ontology":
         sl = slice_ontology(ont, question)
         retrieval = sl.pop("_retrieval", None)
@@ -355,18 +446,45 @@ def ask(question: str, mode: str = "ontology") -> dict:
             .replace("{{ontology_slice}}", yaml.dump(sl, sort_keys=False))
             .replace("{{schema_hints}}", schema_hints(tables))
         )
-    else:
-        tmpl = (ROOT / "prompts" / "ask_sql_baseline.md").read_text()
-        prompt = tmpl.replace("{{question}}", question).replace(
-            "{{schema_hints}}", schema_hints(None, limit_tables=20)
-        )
-    raw = complete(prompt, system="You are a careful Postgres SQL generator.", temperature=0.0)
-    sql = extract_sql(raw)
+        meta = {
+            "ontology_slice": sl,
+            "tables": sorted(tables),
+            "expansions": synonym_expansions(ont, question),
+            "paths": multi_hop_paths(ont, set(retrieval.get("seed_entities") or [])),
+        }
+        return prompt, retrieval, meta
+    tmpl = (ROOT / "prompts" / "ask_sql_baseline.md").read_text()
+    prompt = tmpl.replace("{{question}}", question).replace(
+        "{{schema_hints}}", schema_hints(None, limit_tables=20)
+    )
+    return prompt, None, {"ontology_slice": None, "tables": [], "expansions": synonym_expansions(ont, question), "paths": []}
+
+
+def ask_traced(question: str, mode: str = "ontology", row_limit: int | None = 200) -> dict:
+    """Full ask pipeline with a rich UI trace. Retrieval/SQL identical to ask()."""
+    import time
+    t0 = time.perf_counter()
+    prompt, retrieval, meta = build_prompt(question, mode=mode)
+    t_prompt = time.perf_counter()
+    system = "You are a careful Postgres SQL generator."
+    raw = complete(prompt, system=system, temperature=0.0)
+    t_llm = time.perf_counter()
+    sql_error = None
+    sql = None
     try:
-        rows = run_sql(sql)
-        err = None
+        sql = extract_sql(raw)
     except Exception as e:
-        rows, err = [], str(e)
+        sql_error = f"SQL extract failed: {e}"
+        sql = None
+    rows, err = [], sql_error
+    if sql and not sql_error:
+        try:
+            rows = run_sql(sql, row_limit=row_limit)
+            err = None
+        except Exception as e:
+            rows, err = [], str(e)
+    t_end = time.perf_counter()
+    sl = meta.get("ontology_slice") or {}
     return {
         "question": question,
         "mode": mode,
@@ -375,6 +493,63 @@ def ask(question: str, mode: str = "ontology") -> dict:
         "error": err,
         "raw": raw,
         "retrieval": retrieval,
+        "prompt": prompt,
+        "system": system,
+        "prompt_chars": len(prompt),
+        "prompt_approx_tokens": max(1, len(prompt) // 4),
+        "expansions": meta.get("expansions"),
+        "paths": meta.get("paths") or [],
+        "entities": sl.get("entities") or [],
+        "relationships": sl.get("relationships") or [],
+        "rules": sl.get("rules") or [],
+        "metrics": sl.get("metrics") or [],
+        "value_meanings": sl.get("value_meanings") or [],
+        "tables": meta.get("tables") or [],
+        "latency_sec": {
+            "prompt_build": round(t_prompt - t0, 3),
+            "llm": round(t_llm - t_prompt, 3),
+            "sql": round(t_end - t_llm, 3),
+            "total": round(t_end - t0, 3),
+        },
+        "nuances": _nuances(mode, retrieval, err, meta),
+    }
+
+
+def _nuances(mode, retrieval, err, meta) -> list[str]:
+    notes = [
+        "Scrambled warehouse names (`wh.*`) are what the LLM sees; "
+        "`data/scramble_map.yaml` is never sent.",
+        f"Mode: {'ontology retrieval' if mode == 'ontology' else 'schema-only baseline'}.",
+    ]
+    if mode == "ontology" and retrieval:
+        if not retrieval.get("seed_entities"):
+            notes.append("Retrieval fell back to degree-based seed entities (weak token overlap).")
+        if retrieval.get("bridge_entities"):
+            notes.append(
+                "Multi-hop bridges added: " + ", ".join(retrieval["bridge_entities"])
+            )
+        if not retrieval.get("rules") and not retrieval.get("metrics"):
+            notes.append("No business rules/metrics matched this question.")
+    if err:
+        notes.append(f"SQL/execution error: {err}")
+    return notes
+
+
+
+def ask(question: str, mode: str = "ontology") -> dict:
+    """CLI/eval entry point. Same keys as before; extras ignored by evaluate.py.
+
+    Uses ask_traced with row_limit=None so eval still sees full result sets.
+    """
+    traced = ask_traced(question, mode=mode, row_limit=None)
+    return {
+        "question": traced["question"],
+        "mode": traced["mode"],
+        "sql": traced["sql"],
+        "rows": traced["rows"],
+        "error": traced["error"],
+        "raw": traced["raw"],
+        "retrieval": traced["retrieval"],
     }
 
 def main():

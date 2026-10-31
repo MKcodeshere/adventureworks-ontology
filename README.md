@@ -25,6 +25,7 @@ with and without that ontology, and measure the difference.
 - 30 eval questions (simple / medium / complex) tagged structured / needs-docs / both
 - Scripts to profile the schema, draft an ontology via any LLM, ask questions, and evaluate
 - Charts from real eval runs (baseline vs ontology)
+- Streamlit guided UI (`app/app.py`) with provenance and live SQL
 
 ## Layout
 
@@ -178,6 +179,33 @@ Eval archives live under `eval/runs/v1_<model>/`. After each full run,
 | Q28 | complex | structured | Top 10 salespeople by YTD |
 | Q29 | complex | both | Orders that include highly rated products |
 | Q30 | complex | both | FY2024 US ship-to subtotal |
+
+
+## Try it in the browser
+
+A Streamlit guide walks through one question step by step: tokens and synonym
+hits, ontology entities and multi-hop joins, business rules with **From tables**
+vs **From docs** provenance (snippet + original URL), the exact prompt, generated
+SQL, live Postgres rows, and an eval check against gold when you pick a sample
+question.
+
+```bash
+pip install -r requirements.txt
+# Postgres with AdventureWorks + wh views must be up (see Quick start)
+streamlit run app/app.py
+```
+
+Open the URL Streamlit prints (default `http://localhost:8501`). Use the sidebar
+to pick Gemini / Ollama Cloud / OpenAI / Anthropic, toggle Ontology vs Schema-only
+vs Compare both, and choose a sample from the 30 eval questions.
+
+Tabs:
+
+- **Ask (guided)** — the step-by-step trace
+- **Ontology explorer** — browse entities / relationships / rules + interactive graph
+- **Benchmark** — `eval/report.md` and accuracy charts
+
+Screenshots from a local run live under `docs/images/app-*.png`.
 
 ## Licence
 

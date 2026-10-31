@@ -1,3 +1,6 @@
 psycopg2-binary>=2.9.9
 PyYAML>=6.0
 matplotlib>=3.8
+streamlit>=1.32
+streamlit-agraph>=0.0.12
+pyvis>=0.3.2
