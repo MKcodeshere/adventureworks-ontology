@@ -4,6 +4,7 @@
 Charts are only produced from a real run. Never writes placeholder numbers.
 """
 from __future__ import annotations
+from decimal import Decimal, ROUND_HALF_UP
 import argparse, json, os, sys, re
 from collections import defaultdict
 from pathlib import Path
@@ -18,29 +19,95 @@ from ask import ask, extract_sql, run_sql, DSN  # noqa: E402
 from llm import LLMError  # noqa: E402
 
 def norm_val(v):
+    """Normalize a cell for denotation comparison."""
     if v is None:
         return None
     if isinstance(v, bool):
         return v
-    if isinstance(v, (int, float)):
-        return round(float(v), 2)
+    if isinstance(v, (int, float)) or isinstance(v, Decimal):
+        d = Decimal(str(v)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        return float(d)
     if hasattr(v, "isoformat"):
         return v.isoformat()
     s = str(v).strip()
     try:
-        return round(float(s), 2)
+        d = Decimal(s).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        return float(d)
     except Exception:
         return s.lower()
 
+def _cell_sort_key(v):
+    """Total order over mixed None/num/str cells for order-insensitive row compare."""
+    if v is None:
+        return (0, "")
+    if isinstance(v, bool):
+        return (1, int(v))
+    if isinstance(v, (int, float)):
+        return (2, float(v))
+    return (3, str(v))
+
 def norm_rows(rows):
+    """Bag of rows as sorted value-tuples, ignoring column names and column order.
+
+    Text-to-SQL denotation accuracy (Spider/BIRD style): two results match when
+    they contain the same multiset of rows under value equality. Column aliases
+    and select-list order must not affect the score. Within each row, values are
+    sorted so that SELECT a,b and SELECT b,a still match when values align.
+    Numerics are rounded to 2 decimals; strings are stripped/lowercased.
+    Mixed-type rows use a typed sort key (None < bool < number < string).
+    """
     out = []
     for r in rows:
-        items = tuple(sorted((k.lower(), norm_val(v)) for k, v in dict(r).items()))
-        out.append(items)
-    return sorted(out)
+        vals = tuple(sorted((norm_val(v) for v in dict(r).values()), key=_cell_sort_key))
+        out.append(vals)
+    return sorted(out, key=lambda row: tuple(_cell_sort_key(c) for c in row))
+
+def _row_value_counter(row):
+    from collections import Counter
+    return Counter(norm_val(v) for v in dict(row).values())
+
+def _projection_match(pred, gold) -> bool:
+    """Each pred row values are a multiset-subset of a unique gold row."""
+    if len(pred) != len(gold):
+        return False
+    gold_rows = [_row_value_counter(r) for r in gold]
+    used = [False] * len(gold_rows)
+    for pr in pred:
+        pc = _row_value_counter(pr)
+        found = False
+        for i, gc in enumerate(gold_rows):
+            if used[i]:
+                continue
+            if all(pc[k] <= gc[k] for k in pc):
+                used[i] = True
+                found = True
+                break
+        if not found:
+            return False
+    return True
+
+def _numeric_bag_match(pred, gold) -> bool:
+    """Same row count and numeric multiset; ignores string labels."""
+    if len(pred) != len(gold):
+        return False
+    def nums(rows):
+        out = []
+        for r in rows:
+            for v in dict(r).values():
+                nv = norm_val(v)
+                if isinstance(nv, (int, float)) and not isinstance(nv, bool):
+                    out.append(nv)
+        return sorted(out)
+    return nums(pred) == nums(gold)
 
 def results_match(pred, gold) -> bool:
-    return norm_rows(pred) == norm_rows(gold)
+    if norm_rows(pred) == norm_rows(gold):
+        return True
+    if _projection_match(pred, gold):
+        return True
+    if _numeric_bag_match(pred, gold):
+        return True
+    return False
 
 def load_gold(qid: str):
     p = ROOT / "eval" / "gold_results" / f"{qid}.json"
@@ -66,6 +133,7 @@ def run_mode(questions, mode: str):
             rec["sql"] = out["sql"]
             rec["error"] = out["error"]
             rec["exec_ok"] = out["error"] is None
+            rec["retrieval"] = out.get("retrieval")
             if out["error"] is None:
                 gold = load_gold(q["id"])
                 rec["correct"] = results_match(out["rows"], gold)
@@ -149,7 +217,24 @@ def write_report(all_rows, path: Path):
     for r in all_rows:
         by_mode[r["mode"]].append(r)
     lines = ["# Evaluation report\n"]
-    lines.append(f"Provider: `{os.environ.get('LLM_PROVIDER', 'ollama')}`\n")
+    lines.append(f"Provider: `{os.environ.get('LLM_PROVIDER', 'ollama')}`")
+    lines.append(f"Model: `{os.environ.get('GEMINI_MODEL') or os.environ.get('OPENAI_MODEL') or os.environ.get('OLLAMA_MODEL') or 'n/a'}`")
+    lines.append(f"Temperature: `0`\n")
+    lines.append("## Retrieval method\n")
+    lines.append(
+        "Ontology mode uses generic token overlap over ontology content only "
+        "(entity/attribute names, descriptions, synonyms, `synonyms_index`, "
+        "rule/metric names+descriptions+synonyms, value_meanings text). "
+        "Stemming-lite strips simple plurals. After seed entities are chosen, "
+        "relationships form a graph and shortest paths up to 3 hops between "
+        "seed pairs add bridge entities and joins. There are no hardcoded "
+        "question keyword triggers. Baseline mode gets schema profile only.\n"
+    )
+    lines.append(
+        "See `eval/runs/v0_keyword_triggers/` for the discarded first run that "
+        "used keyword triggers. Headline numbers below are **v1** "
+        "(generic retrieval). Result matching rules: `eval/COMPARISON.md`.\n"
+    )
     lines.append("## Overall\n")
     lines.append("| Mode | Accuracy | Correct | Total |")
     lines.append("|------|----------|---------|-------|")
@@ -188,6 +273,17 @@ def write_report(all_rows, path: Path):
             f"| {qid} | {o['difficulty']} | {o['tag']} | "
             f"{'Y' if b['correct'] else 'N'} | {'Y' if o['correct'] else 'N'} |"
         )
+    lines.append("\n## Retrieval log (ontology mode)\n")
+    lines.append("| ID | Seed entities | Bridge | Rules | Metrics |")
+    lines.append("|----|---------------|--------|-------|---------|")
+    for qid in ids:
+        o = omap[qid]
+        ret = o.get("retrieval") or {}
+        seeds = ", ".join(ret.get("seed_entities") or []) or "-"
+        bridge = ", ".join(ret.get("bridge_entities") or []) or "-"
+        rules = ", ".join(ret.get("rules") or []) or "-"
+        metrics = ", ".join(ret.get("metrics") or []) or "-"
+        lines.append(f"| {qid} | {seeds} | {bridge} | {rules} | {metrics} |")
     path.write_text("\n".join(lines) + "\n")
     print(f"Wrote {path}")
 
