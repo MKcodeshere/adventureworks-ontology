@@ -1,0 +1,71 @@
+{
+  "id": "Q22",
+  "n_rows": 16,
+  "rows": [
+    {
+      "dept_nm": "Production",
+      "n_emp": 179
+    },
+    {
+      "dept_nm": "Sales",
+      "n_emp": 18
+    },
+    {
+      "dept_nm": "Purchasing",
+      "n_emp": 12
+    },
+    {
+      "dept_nm": "Finance",
+      "n_emp": 10
+    },
+    {
+      "dept_nm": "Information Services",
+      "n_emp": 10
+    },
+    {
+      "dept_nm": "Marketing",
+      "n_emp": 9
+    },
+    {
+      "dept_nm": "Facilities and Maintenance",
+      "n_emp": 7
+    },
+    {
+      "dept_nm": "Engineering",
+      "n_emp": 6
+    },
+    {
+      "dept_nm": "Human Resources",
+      "n_emp": 6
+    },
+    {
+      "dept_nm": "Production Control",
+      "n_emp": 6
+    },
+    {
+      "dept_nm": "Quality Assurance",
+      "n_emp": 6
+    },
+    {
+      "dept_nm": "Shipping and Receiving",
+      "n_emp": 6
+    },
+    {
+      "dept_nm": "Document Control",
+      "n_emp": 5
+    },
+    {
+      "dept_nm": "Research and Development",
+      "n_emp": 4
+    },
+    {
+      "dept_nm": "Tool Design",
+      "n_emp": 4
+    },
+    {
+      "dept_nm": "Executive",
+      "n_emp": 2
+    }
+  ],
+  "truncated": false
+}

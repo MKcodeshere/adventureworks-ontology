@@ -1,0 +1,27 @@
+{
+  "id": "Q27",
+  "n_rows": 4,
+  "rows": [
+    {
+      "product_line": "M ",
+      "n_products": 91,
+      "avg_list_prc": 827.06
+    },
+    {
+      "product_line": "R ",
+      "n_products": 100,
+      "avg_list_prc": 965.35
+    },
+    {
+      "product_line": "S ",
+      "n_products": 35,
+      "avg_list_prc": 50.4
+    },
+    {
+      "product_line": "T ",
+      "n_products": 52,
+      "avg_list_prc": 840.76
+    }
+  ],
+  "truncated": false
+}

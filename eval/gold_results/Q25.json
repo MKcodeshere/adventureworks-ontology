@@ -1,0 +1,32 @@
+{
+  "id": "Q25",
+  "n_rows": 5,
+  "rows": [
+    {
+      "prd_id": 793,
+      "prd_nm": "Road-250 Black, 44",
+      "sales_amt": 2516857.31
+    },
+    {
+      "prd_id": 794,
+      "prd_nm": "Road-250 Black, 48",
+      "sales_amt": 2347655.95
+    },
+    {
+      "prd_id": 795,
+      "prd_nm": "Road-250 Black, 52",
+      "sales_amt": 2012447.78
+    },
+    {
+      "prd_id": 753,
+      "prd_nm": "Road-150 Red, 56",
+      "sales_amt": 1847818.63
+    },
+    {
+      "prd_id": 976,
+      "prd_nm": "Road-350-W Yellow, 48",
+      "sales_amt": 1774883.56
+    }
+  ],
+  "truncated": false
+}

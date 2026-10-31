@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+venv/
+eval/last_run.json
+eval/charts/*.png
+artifacts/schema_profile.json.bak
+.DS_Store
+*.log
+/tmp/

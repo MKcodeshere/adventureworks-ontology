@@ -1,0 +1,15 @@
+{
+  "id": "Q24",
+  "n_rows": 2,
+  "rows": [
+    {
+      "channel": "internet",
+      "sales_amt": 15597800.41
+    },
+    {
+      "channel": "reseller",
+      "sales_amt": 29389240.42
+    }
+  ],
+  "truncated": false
+}

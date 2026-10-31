@@ -1,0 +1,27 @@
+{
+  "id": "Q14",
+  "n_rows": 5,
+  "rows": [
+    {
+      "terr_nm": "Australia",
+      "n_orders": 6843
+    },
+    {
+      "terr_nm": "Southwest",
+      "n_orders": 6224
+    },
+    {
+      "terr_nm": "Northwest",
+      "n_orders": 4594
+    },
+    {
+      "terr_nm": "Canada",
+      "n_orders": 4067
+    },
+    {
+      "terr_nm": "United Kingdom",
+      "n_orders": 3219
+    }
+  ],
+  "truncated": false
+}

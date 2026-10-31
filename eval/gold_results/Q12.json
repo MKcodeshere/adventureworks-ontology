@@ -1,0 +1,15 @@
+{
+  "id": "Q12",
+  "n_rows": 2,
+  "rows": [
+    {
+      "channel": "internet",
+      "n": 27659
+    },
+    {
+      "channel": "reseller",
+      "n": 3806
+    }
+  ],
+  "truncated": false
+}

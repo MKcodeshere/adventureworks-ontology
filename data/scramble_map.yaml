@@ -1,0 +1,302 @@
+description: DEBUG ONLY. Maps cryptic wh.* names back to AdventureWorks originals. Do not feed to the
+  LLM.
+schemas:
+  wh: scrambled warehouse layer over humanresources/person/production/purchasing/sales
+tables:
+  wh.sls_ord_hdr:
+    source: sales.salesorderheader
+    columns:
+      ord_id: salesorderid
+      ord_dt: orderdate
+      stat_cd: status
+      onl_flg: onlineorderflag
+      cst_id: customerid
+      rep_id: salespersonid
+      terr_id: territoryid
+      net_amt: totaldue
+      sub_amt: subtotal
+      tax_amt: taxamt
+      frt_amt: freight
+      ship_dt: shipdate
+      due_dt: duedate
+      bill_addr_id: billtoaddressid
+      ship_addr_id: shiptoaddressid
+      po_no: purchaseordernumber
+  wh.sls_ord_dtl:
+    source: sales.salesorderdetail
+    columns:
+      ord_id: salesorderid
+      dtl_id: salesorderdetailid
+      prd_id: productid
+      qty: orderqty
+      unit_prc: unitprice
+      disc_pct: unitpricediscount
+      ofr_id: specialofferid
+      trk_no: carriertrackingnumber
+  wh.cst_mstr:
+    source: sales.customer
+    columns:
+      cst_id: customerid
+      pers_id: personid
+      str_id: storeid
+      terr_id: territoryid
+  wh.str_mstr:
+    source: sales.store
+    columns:
+      str_id: businessentityid
+      str_nm: name
+      rep_id: salespersonid
+      demo_xml: demographics
+  wh.terr_dim:
+    source: sales.salesterritory
+    columns:
+      terr_id: territoryid
+      terr_nm: name
+      ctry_cd: countryregioncode
+      terr_grp: group
+      sls_ytd: salesytd
+      sls_ly: saleslastyear
+  wh.sls_rep:
+    source: sales.salesperson
+    columns:
+      rep_id: businessentityid
+      terr_id: territoryid
+      quota_amt: salesquota
+      bonus_amt: bonus
+      comm_pct: commissionpct
+      sls_ytd: salesytd
+      sls_ly: saleslastyear
+  wh.spec_ofr:
+    source: sales.specialoffer
+    columns:
+      ofr_id: specialofferid
+      ofr_desc: description
+      disc_pct: discountpct
+      ofr_typ: type
+      ofr_cat: category
+      start_dt: startdate
+      end_dt: enddate
+      min_qty: minqty
+      max_qty: maxqty
+  wh.spec_ofr_prd:
+    source: sales.specialofferproduct
+    columns:
+      ofr_id: specialofferid
+      prd_id: productid
+  wh.sls_rsn:
+    source: sales.salesreason
+    columns:
+      rsn_id: salesreasonid
+      rsn_nm: name
+      rsn_typ: reasontype
+  wh.sls_ord_rsn:
+    source: sales.salesorderheadersalesreason
+    columns:
+      ord_id: salesorderid
+      rsn_id: salesreasonid
+  wh.prd_mstr:
+    source: production.product
+    columns:
+      prd_id: productid
+      prd_nm: name
+      prd_no: productnumber
+      make_flg: makeflag
+      fg_flg: finishedgoodsflag
+      clr_cd: color
+      list_prc: listprice
+      std_cost: standardcost
+      line_cd: productline
+      cls_cd: class
+      style_cd: style
+      subcat_id: productsubcategoryid
+      mdl_id: productmodelid
+      sell_start_dt: sellstartdate
+      sell_end_dt: sellenddate
+      disc_dt: discontinueddate
+      size_cd: size
+      wt_val: weight
+      mfg_days: daystomanufacture
+      safe_stk: safetystocklevel
+      reord_pt: reorderpoint
+  wh.prd_subcat:
+    source: production.productsubcategory
+    columns:
+      subcat_id: productsubcategoryid
+      cat_id: productcategoryid
+      subcat_nm: name
+  wh.prd_cat:
+    source: production.productcategory
+    columns:
+      cat_id: productcategoryid
+      cat_nm: name
+  wh.prd_mdl:
+    source: production.productmodel
+    columns:
+      mdl_id: productmodelid
+      mdl_nm: name
+      catlg_xml: catalogdescription
+      instr_xml: instructions
+  wh.prd_desc:
+    source: production.productdescription
+    columns:
+      desc_id: productdescriptionid
+      desc_txt: description
+  wh.prd_mdl_desc_cult:
+    source: production.productmodelproductdescriptionculture
+    columns:
+      mdl_id: productmodelid
+      desc_id: productdescriptionid
+      cult_cd: cultureid
+  wh.prd_rev:
+    source: production.productreview
+    columns:
+      rev_id: productreviewid
+      prd_id: productid
+      rev_nm: reviewername
+      rev_dt: reviewdate
+      rating_val: rating
+      cmt_txt: comments
+      email: emailaddress
+  wh.bom:
+    source: production.billofmaterials
+    columns:
+      bom_id: billofmaterialsid
+      asm_prd_id: productassemblyid
+      cmp_prd_id: componentid
+      qty_per: perassemblyqty
+      bom_lvl: bomlevel
+      uom_cd: unitmeasurecode
+      start_dt: startdate
+      end_dt: enddate
+  wh.wrk_ord:
+    source: production.workorder
+    columns:
+      wrk_id: workorderid
+      prd_id: productid
+      qty: orderqty
+      scrap_qty: scrappedqty
+      start_dt: startdate
+      end_dt: enddate
+      due_dt: duedate
+      scrap_rsn_id: scrapreasonid
+  wh.doc_mstr:
+    source: production.document
+    columns:
+      doc_title: title
+      owner_id: owner
+      file_nm: filename
+      stat_cd: status
+      summary_txt: documentsummary
+  wh.pers_mstr:
+    source: person.person
+    columns:
+      pers_id: businessentityid
+      pers_typ: persontype
+      first_nm: firstname
+      last_nm: lastname
+      mid_nm: middlename
+      title_cd: title
+      email_promo: emailpromotion
+  wh.emp_mstr:
+    source: humanresources.employee
+    columns:
+      emp_id: businessentityid
+      job_title: jobtitle
+      hire_dt: hiredate
+      gndr_cd: gender
+      mar_cd: maritalstatus
+      sal_flg: salariedflag
+      cur_flg: currentflag
+      vac_hrs: vacationhours
+      sick_hrs: sickleavehours
+      login_id: loginid
+      natl_id: nationalidnumber
+      birth_dt: birthdate
+  wh.dept_mstr:
+    source: humanresources.department
+    columns:
+      dept_id: departmentid
+      dept_nm: name
+      grp_nm: groupname
+  wh.emp_dept_hist:
+    source: humanresources.employeedepartmenthistory
+    columns:
+      emp_id: businessentityid
+      dept_id: departmentid
+      shift_id: shiftid
+      start_dt: startdate
+      end_dt: enddate
+  wh.addr_mstr:
+    source: person.address
+    columns:
+      addr_id: addressid
+      line1: addressline1
+      line2: addressline2
+      city_nm: city
+      st_id: stateprovinceid
+      zip_cd: postalcode
+  wh.be_addr:
+    source: person.businessentityaddress
+    columns:
+      be_id: businessentityid
+      addr_id: addressid
+      addr_typ_id: addresstypeid
+  wh.st_prov:
+    source: person.stateprovince
+    columns:
+      st_id: stateprovinceid
+      st_cd: stateprovincecode
+      ctry_cd: countryregioncode
+      st_nm: name
+      terr_id: territoryid
+  wh.ctry_rgn:
+    source: person.countryregion
+    columns:
+      ctry_cd: countryregioncode
+      ctry_nm: name
+  wh.vnd_mstr:
+    source: purchasing.vendor
+    columns:
+      vnd_id: businessentityid
+      vnd_nm: name
+      acct_no: accountnumber
+      cred_rtg: creditrating
+      pref_flg: preferredvendorstatus
+      act_flg: activeflag
+  wh.po_hdr:
+    source: purchasing.purchaseorderheader
+    columns:
+      po_id: purchaseorderid
+      stat_cd: status
+      emp_id: employeeid
+      vnd_id: vendorid
+      ord_dt: orderdate
+      ship_dt: shipdate
+      sub_amt: subtotal
+      tax_amt: taxamt
+      frt_amt: freight
+      net_amt: (subtotal+taxamt+freight)
+      ship_mthd_id: shipmethodid
+  wh.po_dtl:
+    source: purchasing.purchaseorderdetail
+    columns:
+      po_id: purchaseorderid
+      dtl_id: purchaseorderdetailid
+      prd_id: productid
+      qty: orderqty
+      unit_prc: unitprice
+      rcv_qty: receivedqty
+      rej_qty: rejectedqty
+      due_dt: duedate
+  wh.cult_dim:
+    source: production.culture
+    columns:
+      cult_cd: cultureid
+      cult_nm: name
+  wh.ship_mthd:
+    source: purchasing.shipmethod
+    columns:
+      ship_mthd_id: shipmethodid
+      ship_nm: name
+      base_amt: shipbase
+      rate_amt: shiprate

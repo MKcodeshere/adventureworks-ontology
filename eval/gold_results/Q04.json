@@ -1,0 +1,19 @@
+{
+  "id": "Q04",
+  "n_rows": 4,
+  "rows": [
+    {
+      "cat_nm": "Accessories"
+    },
+    {
+      "cat_nm": "Bikes"
+    },
+    {
+      "cat_nm": "Clothing"
+    },
+    {
+      "cat_nm": "Components"
+    }
+  ],
+  "truncated": false
+}

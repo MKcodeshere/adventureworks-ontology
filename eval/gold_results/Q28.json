@@ -1,0 +1,67 @@
+{
+  "id": "Q28",
+  "n_rows": 10,
+  "rows": [
+    {
+      "rep_id": 276,
+      "first_nm": "Linda",
+      "last_nm": "Mitchell",
+      "sls_ytd": 4251368.5497
+    },
+    {
+      "rep_id": 289,
+      "first_nm": "Jae",
+      "last_nm": "Pak",
+      "sls_ytd": 4116871.2277
+    },
+    {
+      "rep_id": 275,
+      "first_nm": "Michael",
+      "last_nm": "Blythe",
+      "sls_ytd": 3763178.1787
+    },
+    {
+      "rep_id": 277,
+      "first_nm": "Jillian",
+      "last_nm": "Carson",
+      "sls_ytd": 3189418.3662
+    },
+    {
+      "rep_id": 290,
+      "first_nm": "Ranjit",
+      "last_nm": "Varkey Chudukatil",
+      "sls_ytd": 3121616.3202
+    },
+    {
+      "rep_id": 282,
+      "first_nm": "Jos\u00e9",
+      "last_nm": "Saraiva",
+      "sls_ytd": 2604540.7172
+    },
+    {
+      "rep_id": 281,
+      "first_nm": "Shu",
+      "last_nm": "Ito",
+      "sls_ytd": 2458535.6169
+    },
+    {
+      "rep_id": 279,
+      "first_nm": "Tsvi",
+      "last_nm": "Reiter",
+      "sls_ytd": 2315185.611
+    },
+    {
+      "rep_id": 288,
+      "first_nm": "Rachel",
+      "last_nm": "Valdez",
+      "sls_ytd": 1827066.7118
+    },
+    {
+      "rep_id": 284,
+      "first_nm": "Tete",
+      "last_nm": "Mensa-Annan",
+      "sls_ytd": 1576562.1966
+    }
+  ],
+  "truncated": false
+}

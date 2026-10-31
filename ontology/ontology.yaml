@@ -1,0 +1,406 @@
+# AdventureWorks business ontology over scrambled schema wh.
+# Drafted from artifacts/schema_profile.json + docs/ (no scramble_map).
+version: "1.0"
+schema: wh
+
+entities:
+  - name: SalesOrder
+    description: A customer purchase order with dates, status, channel flag, and totals.
+    table: wh.sls_ord_hdr
+    primary_key: ord_id
+    attributes:
+      - {name: order_date, column: ord_dt}
+      - {name: ship_date, column: ship_dt}
+      - {name: due_date, column: due_dt}
+      - {name: status, column: stat_cd}
+      - {name: online_order_flag, column: onl_flg}
+      - {name: subtotal, column: sub_amt}
+      - {name: tax, column: tax_amt}
+      - {name: freight, column: frt_amt}
+      - {name: total_due, column: net_amt}
+      - {name: customer_id, column: cst_id}
+      - {name: salesperson_id, column: rep_id}
+      - {name: territory_id, column: terr_id}
+    synonyms: [order, sales order, purchase]
+    provenance: docs/business/data_dictionary.md
+
+  - name: SalesOrderLine
+    description: One product line on a sales order.
+    table: wh.sls_ord_dtl
+    primary_key: dtl_id
+    attributes:
+      - {name: order_id, column: ord_id}
+      - {name: product_id, column: prd_id}
+      - {name: quantity, column: qty}
+      - {name: unit_price, column: unit_prc}
+      - {name: discount_pct, column: disc_pct}
+      - {name: offer_id, column: ofr_id}
+    synonyms: [order line, line item]
+    provenance: docs/business/data_dictionary.md
+
+  - name: Customer
+    description: Buyer. May be an individual person or a reseller store.
+    table: wh.cst_mstr
+    primary_key: cst_id
+    attributes:
+      - {name: person_id, column: pers_id}
+      - {name: store_id, column: str_id}
+      - {name: territory_id, column: terr_id}
+    synonyms: [buyer, client, account]
+    provenance: docs/business/data_dictionary.md
+
+  - name: Store
+    description: Reseller retail partner. Annual survey lives in demo_xml.
+    table: wh.str_mstr
+    primary_key: str_id
+    attributes:
+      - {name: name, column: str_nm}
+      - {name: salesperson_id, column: rep_id}
+      - {name: demographics_xml, column: demo_xml}
+    synonyms: [reseller, retailer, outlet]
+    provenance: docs/stores/store_survey.md
+
+  - name: Product
+    description: Item sold or used in manufacturing. Finished goods are sold to customers.
+    table: wh.prd_mstr
+    primary_key: prd_id
+    attributes:
+      - {name: name, column: prd_nm}
+      - {name: product_number, column: prd_no}
+      - {name: finished_goods_flag, column: fg_flg}
+      - {name: make_flag, column: make_flg}
+      - {name: color, column: clr_cd}
+      - {name: list_price, column: list_prc}
+      - {name: standard_cost, column: std_cost}
+      - {name: product_line, column: line_cd}
+      - {name: class, column: cls_cd}
+      - {name: style, column: style_cd}
+      - {name: subcategory_id, column: subcat_id}
+      - {name: model_id, column: mdl_id}
+      - {name: sell_start_date, column: sell_start_dt}
+      - {name: sell_end_date, column: sell_end_dt}
+    synonyms: [item, SKU, finished good]
+    provenance: docs/business/product_codes.md
+
+  - name: ProductSubcategory
+    table: wh.prd_subcat
+    primary_key: subcat_id
+    attributes:
+      - {name: name, column: subcat_nm}
+      - {name: category_id, column: cat_id}
+    synonyms: [subcategory]
+    provenance: docs/business/company_overview.md
+
+  - name: ProductCategory
+    table: wh.prd_cat
+    primary_key: cat_id
+    attributes:
+      - {name: name, column: cat_nm}
+    synonyms: [category]
+    provenance: docs/business/company_overview.md
+
+  - name: ProductModel
+    table: wh.prd_mdl
+    primary_key: mdl_id
+    attributes:
+      - {name: name, column: mdl_nm}
+      - {name: catalog_xml, column: catlg_xml}
+      - {name: instructions_xml, column: instr_xml}
+    synonyms: [model]
+    provenance: docs/products/model_catalog.md
+
+  - name: ProductDescription
+    table: wh.prd_desc
+    primary_key: desc_id
+    attributes:
+      - {name: text, column: desc_txt}
+    synonyms: [description, blurb]
+    provenance: docs/products/catalog_descriptions.md
+
+  - name: ProductReview
+    table: wh.prd_rev
+    primary_key: rev_id
+    attributes:
+      - {name: product_id, column: prd_id}
+      - {name: reviewer, column: rev_nm}
+      - {name: review_date, column: rev_dt}
+      - {name: rating, column: rating_val}
+      - {name: comments, column: cmt_txt}
+    synonyms: [review, rating]
+    provenance: docs/products/reviews.md
+
+  - name: SalesTerritory
+    table: wh.terr_dim
+    primary_key: terr_id
+    attributes:
+      - {name: name, column: terr_nm}
+      - {name: country_code, column: ctry_cd}
+      - {name: group, column: terr_grp}
+      - {name: sales_ytd, column: sls_ytd}
+    synonyms: [territory, region]
+    provenance: docs/business/data_dictionary.md
+
+  - name: Salesperson
+    table: wh.sls_rep
+    primary_key: rep_id
+    attributes:
+      - {name: territory_id, column: terr_id}
+      - {name: quota, column: quota_amt}
+      - {name: bonus, column: bonus_amt}
+      - {name: commission_pct, column: comm_pct}
+      - {name: sales_ytd, column: sls_ytd}
+    synonyms: [rep, sales rep]
+    provenance: docs/business/data_dictionary.md
+
+  - name: Employee
+    table: wh.emp_mstr
+    primary_key: emp_id
+    attributes:
+      - {name: job_title, column: job_title}
+      - {name: hire_date, column: hire_dt}
+      - {name: gender, column: gndr_cd}
+      - {name: current_flag, column: cur_flg}
+      - {name: vacation_hours, column: vac_hrs}
+    synonyms: [worker, staff]
+    provenance: docs/business/data_dictionary.md
+
+  - name: Department
+    table: wh.dept_mstr
+    primary_key: dept_id
+    attributes:
+      - {name: name, column: dept_nm}
+      - {name: group, column: grp_nm}
+    synonyms: [dept]
+    provenance: docs/business/data_dictionary.md
+
+  - name: Person
+    table: wh.pers_mstr
+    primary_key: pers_id
+    attributes:
+      - {name: first_name, column: first_nm}
+      - {name: last_name, column: last_nm}
+      - {name: person_type, column: pers_typ}
+    synonyms: [contact, individual]
+    provenance: docs/business/data_dictionary.md
+
+  - name: Vendor
+    table: wh.vnd_mstr
+    primary_key: vnd_id
+    attributes:
+      - {name: name, column: vnd_nm}
+      - {name: credit_rating, column: cred_rtg}
+      - {name: preferred_flag, column: pref_flg}
+      - {name: active_flag, column: act_flg}
+    synonyms: [supplier]
+    provenance: docs/business/data_dictionary.md
+
+  - name: PurchaseOrder
+    table: wh.po_hdr
+    primary_key: po_id
+    attributes:
+      - {name: status, column: stat_cd}
+      - {name: vendor_id, column: vnd_id}
+      - {name: employee_id, column: emp_id}
+      - {name: order_date, column: ord_dt}
+      - {name: total, column: net_amt}
+    synonyms: [PO, purchase order]
+    provenance: docs/business/data_dictionary.md
+
+  - name: PurchaseOrderLine
+    table: wh.po_dtl
+    primary_key: dtl_id
+    attributes:
+      - {name: po_id, column: po_id}
+      - {name: product_id, column: prd_id}
+      - {name: quantity, column: qty}
+      - {name: unit_price, column: unit_prc}
+      - {name: received_qty, column: rcv_qty}
+      - {name: rejected_qty, column: rej_qty}
+    synonyms: [PO line]
+    provenance: docs/business/data_dictionary.md
+
+  - name: SpecialOffer
+    table: wh.spec_ofr
+    primary_key: ofr_id
+    attributes:
+      - {name: description, column: ofr_desc}
+      - {name: discount_pct, column: disc_pct}
+      - {name: type, column: ofr_typ}
+      - {name: category, column: ofr_cat}
+    synonyms: [promotion, discount offer]
+    provenance: docs/business/data_dictionary.md
+
+  - name: SalesReason
+    table: wh.sls_rsn
+    primary_key: rsn_id
+    attributes:
+      - {name: name, column: rsn_nm}
+      - {name: type, column: rsn_typ}
+    synonyms: [reason]
+    provenance: docs/business/data_dictionary.md
+
+  - name: Address
+    table: wh.addr_mstr
+    primary_key: addr_id
+    attributes:
+      - {name: line1, column: line1}
+      - {name: city, column: city_nm}
+      - {name: postal_code, column: zip_cd}
+      - {name: state_id, column: st_id}
+    synonyms: [address]
+    provenance: docs/business/data_dictionary.md
+
+  - name: CountryRegion
+    table: wh.ctry_rgn
+    primary_key: ctry_cd
+    attributes:
+      - {name: name, column: ctry_nm}
+    synonyms: [country]
+    provenance: docs/business/data_dictionary.md
+
+  - name: BillOfMaterials
+    table: wh.bom
+    primary_key: bom_id
+    attributes:
+      - {name: assembly_product_id, column: asm_prd_id}
+      - {name: component_product_id, column: cmp_prd_id}
+      - {name: qty_per, column: qty_per}
+      - {name: bom_level, column: bom_lvl}
+    synonyms: [BOM, parts list]
+    provenance: docs/business/company_overview.md
+
+  - name: WorkOrder
+    table: wh.wrk_ord
+    primary_key: wrk_id
+    attributes:
+      - {name: product_id, column: prd_id}
+      - {name: quantity, column: qty}
+      - {name: scrap_qty, column: scrap_qty}
+      - {name: start_date, column: start_dt}
+    synonyms: [work order, manufacturing order]
+    provenance: docs/business/data_dictionary.md
+
+relationships:
+  - {name: has_lines, from: SalesOrder, to: SalesOrderLine, join: {left: wh.sls_ord_hdr.ord_id, right: wh.sls_ord_dtl.ord_id}, provenance: schema}
+  - {name: placed_by, from: SalesOrder, to: Customer, join: {left: wh.sls_ord_hdr.cst_id, right: wh.cst_mstr.cst_id}, provenance: schema}
+  - {name: in_territory, from: SalesOrder, to: SalesTerritory, join: {left: wh.sls_ord_hdr.terr_id, right: wh.terr_dim.terr_id}, provenance: schema}
+  - {name: sold_by, from: SalesOrder, to: Salesperson, join: {left: wh.sls_ord_hdr.rep_id, right: wh.sls_rep.rep_id}, provenance: schema}
+  - {name: line_product, from: SalesOrderLine, to: Product, join: {left: wh.sls_ord_dtl.prd_id, right: wh.prd_mstr.prd_id}, provenance: schema}
+  - {name: customer_store, from: Customer, to: Store, join: {left: wh.cst_mstr.str_id, right: wh.str_mstr.str_id}, provenance: schema}
+  - {name: customer_person, from: Customer, to: Person, join: {left: wh.cst_mstr.pers_id, right: wh.pers_mstr.pers_id}, provenance: schema}
+  - {name: product_subcategory, from: Product, to: ProductSubcategory, join: {left: wh.prd_mstr.subcat_id, right: wh.prd_subcat.subcat_id}, provenance: schema}
+  - {name: subcategory_category, from: ProductSubcategory, to: ProductCategory, join: {left: wh.prd_subcat.cat_id, right: wh.prd_cat.cat_id}, provenance: schema}
+  - {name: product_model, from: Product, to: ProductModel, join: {left: wh.prd_mstr.mdl_id, right: wh.prd_mdl.mdl_id}, provenance: schema}
+  - {name: product_reviews, from: Product, to: ProductReview, join: {left: wh.prd_mstr.prd_id, right: wh.prd_rev.prd_id}, provenance: schema}
+  - {name: salesperson_is_employee, from: Salesperson, to: Employee, join: {left: wh.sls_rep.rep_id, right: wh.emp_mstr.emp_id}, provenance: schema}
+  - {name: employee_department, from: Employee, to: Department, via: wh.emp_dept_hist, join_hint: "emp_dept_hist.emp_id = emp_mstr.emp_id AND emp_dept_hist.dept_id = dept_mstr.dept_id AND emp_dept_hist.end_dt IS NULL", provenance: schema}
+  - {name: po_vendor, from: PurchaseOrder, to: Vendor, join: {left: wh.po_hdr.vnd_id, right: wh.vnd_mstr.vnd_id}, provenance: schema}
+  - {name: po_lines, from: PurchaseOrder, to: PurchaseOrderLine, join: {left: wh.po_hdr.po_id, right: wh.po_dtl.po_id}, provenance: schema}
+  - {name: order_reasons, from: SalesOrder, to: SalesReason, via: wh.sls_ord_rsn, provenance: schema}
+  - {name: ship_address, from: SalesOrder, to: Address, join: {left: wh.sls_ord_hdr.ship_addr_id, right: wh.addr_mstr.addr_id}, provenance: schema}
+  - {name: address_state, from: Address, to: wh.st_prov, join: {left: wh.addr_mstr.st_id, right: wh.st_prov.st_id}, provenance: schema}
+  - {name: state_country, from: wh.st_prov, to: CountryRegion, join: {left: wh.st_prov.ctry_cd, right: wh.ctry_rgn.ctry_cd}, provenance: schema}
+  - {name: bom_assembly, from: BillOfMaterials, to: Product, join: {left: wh.bom.asm_prd_id, right: wh.prd_mstr.prd_id}, provenance: docs/business/company_overview.md}
+  - {name: model_description, from: ProductModel, to: ProductDescription, via: wh.prd_mdl_desc_cult, join_hint: "cult_cd = 'en' for English", provenance: docs/products/catalog_descriptions.md}
+
+rules:
+  - name: fiscal_year_start
+    description: Fiscal year starts on July 1. FY2024 = 2023-07-01 through 2024-06-30.
+    sql_hint: "ord_dt >= DATE 'YYYY-07-01' AND ord_dt < (DATE 'YYYY-07-01' + INTERVAL '1 year')"
+    provenance: docs/business/company_overview.md
+
+  - name: internet_vs_reseller
+    description: Online/internet orders have onl_flg = true. Reseller orders have onl_flg = false.
+    sql_hint: "onl_flg = TRUE  -- internet; onl_flg = FALSE -- reseller"
+    provenance: docs/business/kpi_definitions.md
+
+  - name: finished_goods_only
+    description: Products sold to customers have fg_flg = true. Components have fg_flg = false.
+    sql_hint: "fg_flg = TRUE"
+    provenance: docs/business/product_codes.md
+
+  - name: active_product
+    description: Active finished good has sell_start_dt in the past and sell_end_dt null or in the future.
+    sql_hint: "fg_flg AND sell_start_dt <= CURRENT_DATE AND (sell_end_dt IS NULL OR sell_end_dt > CURRENT_DATE)"
+    provenance: docs/business/company_overview.md
+
+  - name: highly_rated
+    description: Highly rated means average review rating >= 4.
+    sql_hint: "AVG(rating_val) >= 4"
+    provenance: docs/business/kpi_definitions.md
+
+  - name: store_specialty
+    description: Store specialty is in StoreSurvey XML field Specialty (Mountain, Road, Touring).
+    sql_hint: "(xpath('//*[local-name()=\"Specialty\"]/text()', demo_xml::xml))[1]::text"
+    provenance: docs/stores/store_survey.md
+
+  - name: sales_order_status_shipped
+    description: Status 5 means Shipped. This snapshot is almost all shipped.
+    sql_hint: "stat_cd = 5"
+    provenance: docs/business/company_overview.md
+
+  - name: po_status
+    description: PO status 1 Pending, 2 Approved, 3 Rejected, 4 Complete.
+    sql_hint: "stat_cd = 4  -- complete"
+    provenance: docs/business/company_overview.md
+
+metrics:
+  - name: line_sales_amount
+    description: Preferred product-level revenue.
+    sql: "(d.unit_prc * d.qty * (1 - COALESCE(d.disc_pct, 0)))"
+    provenance: docs/business/kpi_definitions.md
+
+  - name: order_subtotal
+    description: Header subtotal before tax and freight.
+    sql: "h.sub_amt"
+    provenance: docs/business/kpi_definitions.md
+
+  - name: average_order_value
+    description: Sum of subtotals / count of orders.
+    sql: "SUM(h.sub_amt) / COUNT(DISTINCT h.ord_id)"
+    provenance: docs/business/kpi_definitions.md
+
+  - name: average_review_score
+    description: Mean of rating_val.
+    sql: "AVG(r.rating_val)"
+    provenance: docs/products/reviews.md
+
+value_meanings:
+  - column: wh.prd_mstr.line_cd
+    values: {R: Road, M: Mountain, T: Touring, S: Standard}
+    provenance: docs/business/product_codes.md
+  - column: wh.prd_mstr.cls_cd
+    values: {H: High, M: Medium, L: Low}
+    provenance: docs/business/product_codes.md
+  - column: wh.prd_mstr.style_cd
+    values: {W: Women, M: Men, U: Universal}
+    provenance: docs/business/product_codes.md
+  - column: wh.prd_mstr.fg_flg
+    values: {"true": finished good sold to customers, "false": component / not sold alone}
+    provenance: docs/business/company_overview.md
+  - column: wh.sls_ord_hdr.onl_flg
+    values: {"true": Internet / online sale, "false": Reseller sale}
+    provenance: docs/business/kpi_definitions.md
+  - column: wh.sls_ord_hdr.stat_cd
+    values: {1: In process, 2: Approved, 3: Backordered, 4: Rejected, 5: Shipped, 6: Cancelled}
+    provenance: docs/business/company_overview.md
+  - column: wh.po_hdr.stat_cd
+    values: {1: Pending, 2: Approved, 3: Rejected, 4: Complete}
+    provenance: docs/business/company_overview.md
+  - column: wh.str_mstr.demo_xml.Specialty
+    values: {Mountain: Mountain specialty, Road: Road specialty, Touring: Touring specialty}
+    provenance: docs/stores/store_survey.md
+  - column: wh.str_mstr.demo_xml.BusinessType
+    values: {OS: Outlet Store, VS: Value Store, AW: Adventure Works specialty}
+    provenance: docs/stores/store_survey.md
+
+synonyms_index:
+  revenue: [line_sales_amount, sales amount, sales]
+  internet: [online, web, onl_flg true]
+  reseller: [store channel, onl_flg false]
+  mountain: [line_cd M, Specialty Mountain]
+  road: [line_cd R, Specialty Road]
+  touring: [line_cd T, Specialty Touring]
+  fiscal year: [FY, fiscal_year_start, July 1]
+  churned: []
+  highly rated: [top rated, rating >= 4]

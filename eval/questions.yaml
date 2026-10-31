@@ -1,0 +1,293 @@
+# 30 evaluation questions. Gold SQL targets scrambled schema wh.
+# tags: structured | needs-docs | both
+# difficulty: simple | medium | complex
+
+questions:
+  # ---- SIMPLE (10) ----
+  - id: Q01
+    difficulty: simple
+    tag: structured
+    question: How many sales orders are in the system?
+    gold_sql: |
+      SELECT COUNT(*) AS n FROM wh.sls_ord_hdr;
+
+  - id: Q02
+    difficulty: simple
+    tag: structured
+    question: How many finished goods products do we sell?
+    gold_sql: |
+      SELECT COUNT(*) AS n FROM wh.prd_mstr WHERE fg_flg = TRUE;
+
+  - id: Q03
+    difficulty: simple
+    tag: structured
+    question: How many customers are there?
+    gold_sql: |
+      SELECT COUNT(*) AS n FROM wh.cst_mstr;
+
+  - id: Q04
+    difficulty: simple
+    tag: structured
+    question: List the product category names.
+    gold_sql: |
+      SELECT cat_nm FROM wh.prd_cat ORDER BY cat_nm;
+
+  - id: Q05
+    difficulty: simple
+    tag: structured
+    question: How many employees are currently active?
+    gold_sql: |
+      SELECT COUNT(*) AS n FROM wh.emp_mstr WHERE cur_flg = TRUE;
+
+  - id: Q06
+    difficulty: simple
+    tag: structured
+    question: What is the total number of sales order line items?
+    gold_sql: |
+      SELECT COUNT(*) AS n FROM wh.sls_ord_dtl;
+
+  - id: Q07
+    difficulty: simple
+    tag: needs-docs
+    question: How many Mountain line finished goods do we have?
+    gold_sql: |
+      SELECT COUNT(*) AS n FROM wh.prd_mstr WHERE fg_flg = TRUE AND line_cd = 'M';
+
+  - id: Q08
+    difficulty: simple
+    tag: needs-docs
+    question: How many internet (online) sales orders are there?
+    gold_sql: |
+      SELECT COUNT(*) AS n FROM wh.sls_ord_hdr WHERE onl_flg = TRUE;
+
+  - id: Q09
+    difficulty: simple
+    tag: structured
+    question: How many vendor suppliers are marked active?
+    gold_sql: |
+      SELECT COUNT(*) AS n FROM wh.vnd_mstr WHERE act_flg = TRUE;
+
+  - id: Q10
+    difficulty: simple
+    tag: structured
+    question: How many product reviews exist?
+    gold_sql: |
+      SELECT COUNT(*) AS n FROM wh.prd_rev;
+
+  # ---- MEDIUM (12) ----
+  - id: Q11
+    difficulty: medium
+    tag: structured
+    question: What is the average list price of finished goods by product category?
+    gold_sql: |
+      SELECT c.cat_nm, ROUND(AVG(p.list_prc)::numeric, 2) AS avg_list_prc
+      FROM wh.prd_mstr p
+      JOIN wh.prd_subcat s ON p.subcat_id = s.subcat_id
+      JOIN wh.prd_cat c ON s.cat_id = c.cat_id
+      WHERE p.fg_flg = TRUE
+      GROUP BY c.cat_nm
+      ORDER BY c.cat_nm;
+
+  - id: Q12
+    difficulty: medium
+    tag: needs-docs
+    question: How many reseller orders versus internet orders are there?
+    gold_sql: |
+      SELECT CASE WHEN onl_flg THEN 'internet' ELSE 'reseller' END AS channel,
+             COUNT(*) AS n
+      FROM wh.sls_ord_hdr
+      GROUP BY onl_flg
+      ORDER BY channel;
+
+  - id: Q13
+    difficulty: medium
+    tag: both
+    question: What is total line sales amount for Road products?
+    gold_sql: |
+      SELECT ROUND(SUM(d.unit_prc * d.qty * (1 - COALESCE(d.disc_pct,0)))::numeric, 2) AS sales_amt
+      FROM wh.sls_ord_dtl d
+      JOIN wh.prd_mstr p ON d.prd_id = p.prd_id
+      WHERE p.line_cd = 'R';
+
+  - id: Q14
+    difficulty: medium
+    tag: structured
+    question: Top 5 territories by number of sales orders.
+    gold_sql: |
+      SELECT t.terr_nm, COUNT(*) AS n_orders
+      FROM wh.sls_ord_hdr h
+      JOIN wh.terr_dim t ON h.terr_id = t.terr_id
+      GROUP BY t.terr_nm
+      ORDER BY n_orders DESC
+      LIMIT 5;
+
+  - id: Q15
+    difficulty: medium
+    tag: needs-docs
+    question: Which products are highly rated (average review score at least 4)?
+    gold_sql: |
+      SELECT p.prd_id, p.prd_nm, ROUND(AVG(r.rating_val)::numeric, 2) AS avg_rating, COUNT(*) AS n_reviews
+      FROM wh.prd_rev r
+      JOIN wh.prd_mstr p ON r.prd_id = p.prd_id
+      GROUP BY p.prd_id, p.prd_nm
+      HAVING AVG(r.rating_val) >= 4
+      ORDER BY avg_rating DESC, p.prd_nm;
+
+  - id: Q16
+    difficulty: medium
+    tag: needs-docs
+    question: How many reseller stores specialize in Mountain bikes?
+    gold_sql: |
+      SELECT COUNT(*) AS n
+      FROM wh.str_mstr
+      WHERE (xpath('//*[local-name()="Specialty"]/text()', demo_xml::xml))[1]::text = 'Mountain';
+
+  - id: Q17
+    difficulty: medium
+    tag: structured
+    question: Average order subtotal for orders that have a salesperson assigned.
+    gold_sql: |
+      SELECT ROUND(AVG(sub_amt)::numeric, 2) AS avg_subtotal
+      FROM wh.sls_ord_hdr
+      WHERE rep_id IS NOT NULL;
+
+  - id: Q18
+    difficulty: medium
+    tag: both
+    question: Count of Touring line finished goods that are still active (no sell end date).
+    gold_sql: |
+      SELECT COUNT(*) AS n
+      FROM wh.prd_mstr
+      WHERE fg_flg = TRUE AND line_cd = 'T' AND sell_end_dt IS NULL;
+
+  - id: Q19
+    difficulty: medium
+    tag: structured
+    question: How many purchase orders are complete?
+    gold_sql: |
+      SELECT COUNT(*) AS n FROM wh.po_hdr WHERE stat_cd = 4;
+
+  - id: Q20
+    difficulty: medium
+    tag: structured
+    question: Number of customers linked to a store (reseller customers).
+    gold_sql: |
+      SELECT COUNT(*) AS n FROM wh.cst_mstr WHERE str_id IS NOT NULL;
+
+  - id: Q21
+    difficulty: medium
+    tag: both
+    question: Total line sales for High class Mountain products.
+    gold_sql: |
+      SELECT ROUND(SUM(d.unit_prc * d.qty * (1 - COALESCE(d.disc_pct,0)))::numeric, 2) AS sales_amt
+      FROM wh.sls_ord_dtl d
+      JOIN wh.prd_mstr p ON d.prd_id = p.prd_id
+      WHERE p.line_cd = 'M' AND p.cls_cd = 'H';
+
+  - id: Q22
+    difficulty: medium
+    tag: structured
+    question: Departments with the most current employee assignments.
+    gold_sql: |
+      SELECT d.dept_nm, COUNT(*) AS n_emp
+      FROM wh.emp_dept_hist h
+      JOIN wh.dept_mstr d ON h.dept_id = d.dept_id
+      WHERE h.end_dt IS NULL
+      GROUP BY d.dept_nm
+      ORDER BY n_emp DESC, d.dept_nm;
+
+  # ---- COMPLEX (8) ----
+  - id: Q23
+    difficulty: complex
+    tag: needs-docs
+    question: What was total order subtotal in fiscal year 2024 (July 1 2023 through June 30 2024)?
+    gold_sql: |
+      SELECT ROUND(SUM(sub_amt)::numeric, 2) AS fy2024_subtotal
+      FROM wh.sls_ord_hdr
+      WHERE ord_dt >= DATE '2023-07-01' AND ord_dt < DATE '2024-07-01';
+
+  - id: Q24
+    difficulty: complex
+    tag: both
+    question: Compare internet vs reseller line sales amount in fiscal year 2025.
+    gold_sql: |
+      SELECT CASE WHEN h.onl_flg THEN 'internet' ELSE 'reseller' END AS channel,
+             ROUND(SUM(d.unit_prc * d.qty * (1 - COALESCE(d.disc_pct,0)))::numeric, 2) AS sales_amt
+      FROM wh.sls_ord_hdr h
+      JOIN wh.sls_ord_dtl d ON h.ord_id = d.ord_id
+      WHERE h.ord_dt >= DATE '2024-07-01' AND h.ord_dt < DATE '2025-07-01'
+      GROUP BY h.onl_flg
+      ORDER BY channel;
+
+  - id: Q25
+    difficulty: complex
+    tag: both
+    question: Top 5 Road products by line sales amount.
+    gold_sql: |
+      SELECT p.prd_id, p.prd_nm,
+             ROUND(SUM(d.unit_prc * d.qty * (1 - COALESCE(d.disc_pct,0)))::numeric, 2) AS sales_amt
+      FROM wh.sls_ord_dtl d
+      JOIN wh.prd_mstr p ON d.prd_id = p.prd_id
+      WHERE p.line_cd = 'R'
+      GROUP BY p.prd_id, p.prd_nm
+      ORDER BY sales_amt DESC
+      LIMIT 5;
+
+  - id: Q26
+    difficulty: complex
+    tag: needs-docs
+    question: Average annual sales from the store survey for Road specialty stores.
+    gold_sql: |
+      SELECT ROUND(AVG(((xpath('//*[local-name()="AnnualSales"]/text()', demo_xml::xml))[1]::text)::numeric)::numeric, 2) AS avg_annual_sales
+      FROM wh.str_mstr
+      WHERE (xpath('//*[local-name()="Specialty"]/text()', demo_xml::xml))[1]::text = 'Road';
+
+  - id: Q27
+    difficulty: complex
+    tag: both
+    question: For each product line, count finished goods and their average list price.
+    gold_sql: |
+      SELECT line_cd AS product_line, COUNT(*) AS n_products,
+             ROUND(AVG(list_prc)::numeric, 2) AS avg_list_prc
+      FROM wh.prd_mstr
+      WHERE fg_flg = TRUE AND line_cd IS NOT NULL
+      GROUP BY line_cd
+      ORDER BY line_cd;
+
+  - id: Q28
+    difficulty: complex
+    tag: structured
+    question: Salespeople with their person name and YTD sales, top 10 by YTD.
+    gold_sql: |
+      SELECT r.rep_id, p.first_nm, p.last_nm, r.sls_ytd
+      FROM wh.sls_rep r
+      JOIN wh.pers_mstr p ON r.rep_id = p.pers_id
+      ORDER BY r.sls_ytd DESC NULLS LAST
+      LIMIT 10;
+
+  - id: Q29
+    difficulty: complex
+    tag: both
+    question: How many distinct orders included a highly rated product (avg rating >= 4)?
+    gold_sql: |
+      WITH highly AS (
+        SELECT prd_id FROM wh.prd_rev
+        GROUP BY prd_id
+        HAVING AVG(rating_val) >= 4
+      )
+      SELECT COUNT(DISTINCT d.ord_id) AS n_orders
+      FROM wh.sls_ord_dtl d
+      JOIN highly h ON d.prd_id = h.prd_id;
+
+  - id: Q30
+    difficulty: complex
+    tag: both
+    question: Fiscal year 2024 subtotal for orders shipped to cities in the United States.
+    gold_sql: |
+      SELECT ROUND(SUM(h.sub_amt)::numeric, 2) AS fy2024_us_subtotal
+      FROM wh.sls_ord_hdr h
+      JOIN wh.addr_mstr a ON h.ship_addr_id = a.addr_id
+      JOIN wh.st_prov s ON a.st_id = s.st_id
+      JOIN wh.ctry_rgn c ON s.ctry_cd = c.ctry_cd
+      WHERE c.ctry_cd = 'US'
+        AND h.ord_dt >= DATE '2023-07-01' AND h.ord_dt < DATE '2024-07-01';

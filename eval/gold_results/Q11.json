@@ -1,0 +1,23 @@
+{
+  "id": "Q11",
+  "n_rows": 4,
+  "rows": [
+    {
+      "cat_nm": "Accessories",
+      "avg_list_prc": 34.35
+    },
+    {
+      "cat_nm": "Bikes",
+      "avg_list_prc": 1586.74
+    },
+    {
+      "cat_nm": "Clothing",
+      "avg_list_prc": 50.99
+    },
+    {
+      "cat_nm": "Components",
+      "avg_list_prc": 469.86
+    }
+  ],
+  "truncated": false
+}

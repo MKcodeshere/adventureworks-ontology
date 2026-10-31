@@ -1,0 +1,19 @@
+{
+  "id": "Q15",
+  "n_rows": 2,
+  "rows": [
+    {
+      "prd_id": 709,
+      "prd_nm": "Mountain Bike Socks, M",
+      "avg_rating": 5.0,
+      "n_reviews": 1
+    },
+    {
+      "prd_id": 798,
+      "prd_nm": "Road-550-W Yellow, 40",
+      "avg_rating": 5.0,
+      "n_reviews": 1
+    }
+  ],
+  "truncated": false
+}
