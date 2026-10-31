@@ -245,13 +245,12 @@ def write_report(all_rows, path: Path, model: str | None = None):
     lines.append("Temperature: `0`\n")
     lines.append("## Retrieval method\n")
     lines.append(
-        "Ontology mode uses generic token overlap over ontology content only "
-        "(entity/attribute names, descriptions, synonyms, `synonyms_index`, "
-        "rule/metric names+descriptions+synonyms, value_meanings text). "
-        "Stemming-lite strips simple plurals. After seed entities are chosen, "
-        "relationships form a graph and shortest paths up to 3 hops between "
-        "seed pairs add bridge entities and joins. There are no hardcoded "
-        "question keyword triggers. Baseline mode gets schema profile only.\n"
+        "Ontology mode uses **v2 IDF-weighted** retrieval: entity scores weight "
+        "name/synonym hits highest, attribute names medium, description lowest; "
+        "corpus IDF down-weights generic tokens; synonym expansion only on full "
+        "phrases or strong tokens. Top seeds by relative score (≥40% of best, "
+        "max 5), then multi-hop paths ≤3 hops for bridges. No question-tuned "
+        "keyword triggers. Baseline mode gets schema profile only.\n"
     )
     lines.append("Result matching rules: `eval/COMPARISON.md`.\n")
     lines.append("## Overall\n")
@@ -308,31 +307,58 @@ def write_report(all_rows, path: Path, model: str | None = None):
     path.write_text("\n".join(lines) + "\n")
     print(f"Wrote {path}")
 
+def _load_run_dir(d: Path) -> tuple[str, list, dict] | None:
+    lr = d / "last_run.json"
+    if not lr.exists():
+        return None
+    rows = json.loads(lr.read_text())
+    meta = {}
+    if (d / "meta.json").exists():
+        meta = json.loads((d / "meta.json").read_text())
+    label = meta.get("model") or d.name.split("_", 1)[-1]
+    return label, rows, meta
+
+
 def load_v1_model_runs() -> dict[str, list]:
-    """Load archived v1_* model runs: {display_label: rows}, preferred order."""
+    """Backward-compatible: v1 archives only."""
+    return load_report_runs(prefer_v2=False)
+
+
+def load_report_runs(prefer_v2: bool = True) -> dict[str, list]:
+    """Load runs for the aggregate report.
+
+    When prefer_v2=True (default): use v2_* for models that have it (current
+    retrieval), keep gemini from v1 and label it as v1-only.
+    """
     runs_dir = ROOT / "eval" / "runs"
-    by_model = {}
     if not runs_dir.exists():
         return {}
+    v1, v2 = {}, {}
     for d in sorted(runs_dir.iterdir()):
-        if not d.is_dir() or not d.name.startswith("v1_"):
+        if not d.is_dir():
             continue
-        lr = d / "last_run.json"
-        if not lr.exists():
-            continue
-        rows = json.loads(lr.read_text())
-        meta = d / "meta.json"
-        if meta.exists():
-            label = json.loads(meta.read_text()).get("model") or d.name[len("v1_"):]
-        else:
-            label = d.name[len("v1_"):]
-        by_model[label] = rows
+        if d.name.startswith("v1_"):
+            got = _load_run_dir(d)
+            if got:
+                v1[got[0]] = (got[1], got[2], d.name)
+        elif d.name.startswith("v2_"):
+            got = _load_run_dir(d)
+            if got:
+                v2[got[0]] = (got[1], got[2], d.name)
+
     ordered = {}
+    # Gemini: always v1 when present (credits exhausted — not rerun on v2)
+    if "gemini-2.5-flash" in v1:
+        ordered["gemini-2.5-flash (v1 retrieval)"] = v1["gemini-2.5-flash"][0]
     for key in MODEL_ORDER:
-        if key in by_model:
-            ordered[MODEL_DISPLAY.get(key, key)] = by_model.pop(key)
-    for key, rows in by_model.items():
-        ordered[MODEL_DISPLAY.get(key, key)] = rows
+        if key == "gemini-2.5-flash":
+            continue
+        if prefer_v2 and key in v2:
+            disp = MODEL_DISPLAY.get(key, key) + " (v2 retrieval)"
+            ordered[disp] = v2[key][0]
+        elif key in v1:
+            disp = MODEL_DISPLAY.get(key, key) + " (v1 retrieval)"
+            ordered[disp] = v1[key][0]
     return ordered
 
 def write_model_comparison_charts(model_runs: dict[str, list], out_dir: Path):
@@ -402,7 +428,8 @@ def write_model_comparison_charts(model_runs: dict[str, list], out_dir: Path):
 
 def write_aggregate_report(model_runs: dict[str, list], path: Path):
     lines = ["# Evaluation report (multi-model)\n"]
-    lines.append("Temperature: `0`. Retrieval: v1 generic ontology retrieval. "
+    lines.append("Temperature: `0`. Current app retrieval is **v2 IDF-weighted**. "
+                 "Gemini kept at **v1** (credits exhausted, not rerun). "
                  "Comparator: `eval/COMPARISON.md`.\n")
     lines.append("## Models\n")
     lines.append(
@@ -458,30 +485,32 @@ def write_aggregate_report(model_runs: dict[str, list], path: Path):
         "`accuracy_by_difficulty.png`, `accuracy_by_tag.png`) are from "
         "`gemini-2.5-flash` (kept as the primary reference)."
     )
-    lines.append("- Per-model charts under `eval/runs/v1_<model>/charts/`")
+    lines.append("- Per-model charts under `eval/runs/v2_<model>/charts/` (and v1_*)")
     lines.append("\n## Run archives\n")
-    for model in model_runs:
-        slug = model_slug(model)
-        lines.append(f"- `eval/runs/v1_{slug}/`")
+    lines.append("- `eval/runs/v1_gemini-2.5-flash/` — v1 retrieval only")
+    lines.append("- `eval/runs/v1_*` — original v1 Ollama/Gemini archives (kept)")
+    lines.append("- `eval/runs/v2_*` — v2 IDF retrieval (current app)")
     path.write_text("\n".join(lines) + "\n")
     print(f"Wrote aggregate {path}")
 
-def archive_run(all_rows, model: str):
+def archive_run(all_rows, model: str, version: str = "v2"):
     slug = model_slug(model)
-    run_dir = ROOT / "eval" / "runs" / f"v1_{slug}"
+    run_dir = ROOT / "eval" / "runs" / f"{version}_{slug}"
     charts = run_dir / "charts"
     charts.mkdir(parents=True, exist_ok=True)
+    retrieval_tag = "v2_idf" if version == "v2" else "v1_generic"
     (run_dir / "last_run.json").write_text(json.dumps(all_rows, indent=2, default=str))
     (run_dir / "meta.json").write_text(json.dumps({
         "model": model,
         "provider": os.environ.get("LLM_PROVIDER"),
         "temperature": 0,
-        "retrieval": "v1_generic",
+        "retrieval": retrieval_tag,
+        "version": version,
     }, indent=2))
     write_report(all_rows, run_dir / "report.md", model=model)
     write_charts(all_rows, charts)
     (run_dir / "README.md").write_text(
-        f"# v1 run — {model}\n\nTemperature 0. Generic retrieval. "
+        f"# {version} run — {model}\n\nTemperature 0. Retrieval={retrieval_tag}. "
         f"See report.md and charts/.\n"
     )
     return run_dir
@@ -492,10 +521,12 @@ def main():
     ap.add_argument("--mode", choices=["both", "baseline", "ontology"], default="both")
     ap.add_argument("--rebuild-aggregate", action="store_true",
                     help="Only rebuild multi-model report/charts from archived runs")
+    ap.add_argument("--version", choices=["v1", "v2"], default="v2",
+                    help="Archive folder prefix (default v2)")
     args = ap.parse_args()
 
     if args.rebuild_aggregate:
-        model_runs = load_v1_model_runs()
+        model_runs = load_report_runs(prefer_v2=True)
         write_aggregate_report(model_runs, ROOT / "eval" / "report.md")
         write_model_comparison_charts(model_runs, ROOT / "eval" / "charts")
         gem_charts = ROOT / "eval" / "runs" / "v1_gemini-2.5-flash" / "charts"
@@ -520,8 +551,8 @@ def main():
     if args.mode == "both" or len(modes) == 2:
         write_report(all_rows, ROOT / "eval" / "report.md", model=model)
         write_charts(all_rows, ROOT / "eval" / "charts")
-        archive_run(all_rows, model)
-        model_runs = load_v1_model_runs()
+        archive_run(all_rows, model, version=args.version)
+        model_runs = load_report_runs(prefer_v2=True)
         write_aggregate_report(model_runs, ROOT / "eval" / "report.md")
         write_model_comparison_charts(model_runs, ROOT / "eval" / "charts")
         # Keep default single-model charts as Gemini reference when present.

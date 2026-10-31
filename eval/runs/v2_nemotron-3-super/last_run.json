@@ -1,0 +1,2520 @@
+[
+  {
+    "id": "Q01",
+    "difficulty": "simple",
+    "tag": "structured",
+    "question": "How many sales orders are in the system?",
+    "mode": "baseline",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(*) AS sales_order_count\nFROM wh.sls_ord_hdr",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q02",
+    "difficulty": "simple",
+    "tag": "structured",
+    "question": "How many finished goods products do we sell?",
+    "mode": "baseline",
+    "correct": false,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(DISTINCT pm.prd_id)\nFROM wh.prd_mstr pm\nJOIN wh.sls_ord_dtl sod ON sod.prd_id = pm.prd_id\nWHERE pm.fg_flg",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q03",
+    "difficulty": "simple",
+    "tag": "structured",
+    "question": "How many customers are there?",
+    "mode": "baseline",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(*) AS customer_count\nFROM wh.cst_mstr",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q04",
+    "difficulty": "simple",
+    "tag": "structured",
+    "question": "List the product category names.",
+    "mode": "baseline",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT DISTINCT cat_nm\nFROM wh.prd_cat\nORDER BY cat_nm",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q05",
+    "difficulty": "simple",
+    "tag": "structured",
+    "question": "How many employees are currently active?",
+    "mode": "baseline",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(*) AS active_employee_count\nFROM wh.emp_mstr\nWHERE cur_flg",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q06",
+    "difficulty": "simple",
+    "tag": "structured",
+    "question": "What is the total number of sales order line items?",
+    "mode": "baseline",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(*) AS total_sales_order_line_items\nFROM wh.sls_ord_dtl",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q07",
+    "difficulty": "simple",
+    "tag": "needs-docs",
+    "question": "How many Mountain line finished goods do we have?",
+    "mode": "baseline",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(*)\nFROM wh.prd_mstr\nWHERE line_cd = 'M'\n  AND fg_flg = true",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q08",
+    "difficulty": "simple",
+    "tag": "needs-docs",
+    "question": "How many internet (online) sales orders are there?",
+    "mode": "baseline",
+    "correct": false,
+    "exec_ok": false,
+    "sql": "SELECT COUNT(*) AS internet_sales_orders\nFROM wh.sls_ord_hdr\nWHERE online_flg = TRUE",
+    "error": "column \"online_flg\" does not exist\nLINE 3: WHERE online_flg = TRUE\n              ^\nHINT:  Perhaps you meant to reference the column \"sls_ord_hdr.onl_flg\".\n",
+    "retrieval": null
+  },
+  {
+    "id": "Q09",
+    "difficulty": "simple",
+    "tag": "structured",
+    "question": "How many vendor suppliers are marked active?",
+    "mode": "baseline",
+    "correct": false,
+    "exec_ok": false,
+    "sql": "SELECT COUNT(*) AS active_vendor_count\nFROM wh.vnd_mstr\nWHERE actv_flg",
+    "error": "column \"actv_flg\" does not exist\nLINE 3: WHERE actv_flg\n              ^\nHINT:  Perhaps you meant to reference the column \"vnd_mstr.act_flg\".\n",
+    "retrieval": null
+  },
+  {
+    "id": "Q10",
+    "difficulty": "simple",
+    "tag": "structured",
+    "question": "How many product reviews exist?",
+    "mode": "baseline",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(*) AS product_review_count\nFROM wh.prd_rev",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q11",
+    "difficulty": "medium",
+    "tag": "structured",
+    "question": "What is the average list price of finished goods by product category?",
+    "mode": "baseline",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT\n    pc.cat_nm AS product_category,\n    AVG(p.list_prc) AS avg_list_price\nFROM wh.prd_mstr p\nJOIN wh.prd_subcat ps ON p.subcat_id = ps.subcat_id\nJOIN wh.prd_cat pc ON ps.cat_id = pc.cat_id\nWHERE p.fg_flg = TRUE\nGROUP BY pc.cat_nm",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q12",
+    "difficulty": "medium",
+    "tag": "needs-docs",
+    "question": "How many reseller orders versus internet orders are there?",
+    "mode": "baseline",
+    "correct": false,
+    "exec_ok": false,
+    "sql": "SELECT\n    SUM(CASE WHEN ord_src_cd = 'R' THEN 1 ELSE 0 END) AS reseller_orders,\n    SUM(CASE WHEN ord_src_cd = 'I' THEN 1 ELSE 0 END) AS internet_orders\nFROM wh.sls_ord_hdr",
+    "error": "column \"ord_src_cd\" does not exist\nLINE 2:     SUM(CASE WHEN ord_src_cd = 'R' THEN 1 ELSE 0 END) AS res...\n                          ^\n",
+    "retrieval": null
+  },
+  {
+    "id": "Q13",
+    "difficulty": "medium",
+    "tag": "both",
+    "question": "What is total line sales amount for Road products?",
+    "mode": "baseline",
+    "correct": false,
+    "exec_ok": true,
+    "sql": "SELECT SUM(dtl.qty * dtl.unit_prc) AS total_line_sales_amount\nFROM wh.sls_ord_dtl dtl\nJOIN wh.prd_mstr p ON dtl.prd_id = p.prd_id\nWHERE p.line_cd = 'R'",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q14",
+    "difficulty": "medium",
+    "tag": "structured",
+    "question": "Top 5 territories by number of sales orders.",
+    "mode": "baseline",
+    "correct": false,
+    "exec_ok": true,
+    "sql": "SELECT\n    td.terr_id,\n    COALESCE(td.terr_nm, 'Unknown') AS terr_name,\n    COUNT(*) AS order_count\nFROM wh.sls_ord_hdr soh\nJOIN wh.terr_dim td ON soh.terr_id = td.terr_id\nGROUP BY td.terr_id, td.terr_nm\nORDER BY order_count DESC\nLIMIT 5",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q15",
+    "difficulty": "medium",
+    "tag": "needs-docs",
+    "question": "Which products are highly rated (average review score at least 4)?",
+    "mode": "baseline",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT p.prd_id,\n       p.prd_nm,\n       AVG(r.rating_val) AS avg_rating\nFROM wh.prd_rev r\nJOIN wh.prd_mstr p ON r.prd_id = p.prd_id\nGROUP BY p.prd_id, p.prd_nm\nHAVING AVG(r.rating_val) >= 4\nORDER BY avg_rating DESC",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q16",
+    "difficulty": "medium",
+    "tag": "needs-docs",
+    "question": "How many reseller stores specialize in Mountain bikes?",
+    "mode": "baseline",
+    "correct": false,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(DISTINCT s.str_id) AS mountain_bike_reseller_stores\nFROM wh.sls_ord_hdr h\nJOIN wh.cst_mstr c ON h.cst_id = c.cst_id\nJOIN wh.str_mstr s ON c.str_id = s.str_id\nJOIN wh.sls_ord_dtl d ON h.ord_id = d.ord_id\nJOIN wh.prd_mstr p ON d.prd_id = p.prd_id\nJOIN wh.prd_subcat sc ON p.subcat_id = sc.subcat_id\nJOIN wh.prd_cat cat ON sc.cat_id = cat.cat_id\nWHERE cat.cat_nm = 'Mountain bikes'",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q17",
+    "difficulty": "medium",
+    "tag": "structured",
+    "question": "Average order subtotal for orders that have a salesperson assigned.",
+    "mode": "baseline",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT AVG(soh.sub_amt) AS avg_order_subtotal\nFROM wh.sls_ord_hdr soh\nINNER JOIN wh.sls_rep sr ON soh.rep_id = sr.rep_id",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q18",
+    "difficulty": "medium",
+    "tag": "both",
+    "question": "Count of Touring line finished goods that are still active (no sell end date).",
+    "mode": "baseline",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(*) AS touring_active_fg_count\nFROM wh.prd_mstr\nWHERE line_cd = 'T'\n  AND fg_flg = true\n  AND sell_end_dt IS NULL",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q19",
+    "difficulty": "medium",
+    "tag": "structured",
+    "question": "How many purchase orders are complete?",
+    "mode": "baseline",
+    "correct": false,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(*) AS complete_po_count\nFROM wh.po_hdr\nWHERE stat_cd = 2",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q20",
+    "difficulty": "medium",
+    "tag": "structured",
+    "question": "Number of customers linked to a store (reseller customers).",
+    "mode": "baseline",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(*) AS num_reseller_customers\nFROM wh.cst_mstr\nWHERE str_id IS NOT NULL",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q21",
+    "difficulty": "medium",
+    "tag": "both",
+    "question": "Total line sales for High class Mountain products.",
+    "mode": "baseline",
+    "correct": false,
+    "exec_ok": true,
+    "sql": "SELECT SUM(sod.qty * pm.list_prc) AS total_line_sales\nFROM wh.sls_ord_dtl sod\nJOIN wh.sls_ord_hdr soh ON sod.ord_id = soh.ord_id\nJOIN wh.prd_mstr pm ON sod.prd_id = pm.prd_id\nWHERE pm.cls_cd = 'H'\n  AND pm.line_cd = 'M'",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q22",
+    "difficulty": "medium",
+    "tag": "structured",
+    "question": "Departments with the most current employee assignments.",
+    "mode": "baseline",
+    "correct": false,
+    "exec_ok": true,
+    "sql": "SELECT d.dept_id,\n       d.dept_nm,\n       COUNT(*) AS current_employee_count\nFROM wh.dept_mstr d\nJOIN wh.emp_dept_hist h ON d.dept_id = h.dept_id\nWHERE CURRENT_DATE >= h.start_dt\n  AND (h.end_dt IS NULL OR CURRENT_DATE <= h.end_dt)\nGROUP BY d.dept_id, d.dept_nm\nORDER BY current_employee_count DESC",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q23",
+    "difficulty": "complex",
+    "tag": "needs-docs",
+    "question": "What was total order subtotal in fiscal year 2024 (July 1 2023 through June 30 2024)?",
+    "mode": "baseline",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT SUM(s.sub_amt) AS total_order_subtotal\nFROM wh.sls_ord_hdr s\nWHERE s.ord_dt >= DATE '2023-07-01'\n  AND s.ord_dt < DATE '2024-07-01'",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q24",
+    "difficulty": "complex",
+    "tag": "both",
+    "question": "Compare internet vs reseller line sales amount in fiscal year 2025.",
+    "mode": "baseline",
+    "correct": false,
+    "exec_ok": false,
+    "sql": "WITH sales AS (\n    SELECT\n        CASE\n            WHEN h.ord_src_cd = 'INTERNET' THEN 'Internet'\n            WHEN h.ord_src_cd = 'RESELLER' THEN 'Reseller'\n            ELSE 'Other'\n        END AS channel,\n        d.line_sales_amt AS amount\n    FROM wh.sls_ord_hdr h\n    JOIN wh.sls_ord_dtl d ON d.ord_id = h.ord_id\n    WHERE EXTRACT(YEAR FROM h.ord_dt) = 2025\n)\nSELECT\n    channel,\n    SUM(amount) AS total_sales_amount\nFROM sales\nWHERE channel IN ('Internet', 'Reseller')\nGROUP BY channel\nORDER BY channel",
+    "error": "column h.ord_src_cd does not exist\nLINE 4:             WHEN h.ord_src_cd = 'INTERNET' THEN 'Internet'\n                         ^\n",
+    "retrieval": null
+  },
+  {
+    "id": "Q25",
+    "difficulty": "complex",
+    "tag": "both",
+    "question": "Top 5 Road products by line sales amount.",
+    "mode": "baseline",
+    "correct": false,
+    "exec_ok": true,
+    "sql": "SELECT\n    p.prd_id,\n    p.prd_nm,\n    SUM(d.qty * d.unit_prc) AS line_sales_amount\nFROM wh.prd_mstr p\nJOIN wh.sls_ord_dtl d ON d.prd_id = p.prd_id\nWHERE p.line_cd = 'R'\nGROUP BY p.prd_id, p.prd_nm\nORDER BY line_sales_amount DESC\nLIMIT 5",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q26",
+    "difficulty": "complex",
+    "tag": "needs-docs",
+    "question": "Average annual sales from the store survey for Road specialty stores.",
+    "mode": "baseline",
+    "correct": false,
+    "exec_ok": false,
+    "sql": "WITH yearly_sales AS (\n    SELECT\n        EXTRACT(YEAR FROM h.ord_dt)::int AS yr,\n        SUM(d.unit_prc * d.qty) AS total_sales\n    FROM wh.sls_ord_hdr h\n    JOIN wh.sls_ord_dtl d ON h.ord_id = d.ord_id\n    JOIN wh.cst_mstr c ON h.cst_id = c.cst_id\n    JOIN wh.str_mstr s ON c.str_id = s.str_id\n    WHERE s.specialty = 'Road'\n    GROUP BY EXTRACT(YEAR FROM h.ord_dt)\n)\nSELECT AVG(total_sales) AS avg_annual_sales\nFROM yearly_sales",
+    "error": "column s.specialty does not exist\nLINE 9:     WHERE s.specialty = 'Road'\n                  ^\n",
+    "retrieval": null
+  },
+  {
+    "id": "Q27",
+    "difficulty": "complex",
+    "tag": "both",
+    "question": "For each product line, count finished goods and their average list price.",
+    "mode": "baseline",
+    "correct": false,
+    "exec_ok": true,
+    "sql": "SELECT\n    line_cd AS product_line,\n    COUNT(*) AS finished_goods_count,\n    AVG(list_prc) AS average_list_price\nFROM wh.prd_mstr\nWHERE fg_flg\nGROUP BY line_cd\nORDER BY line_cd",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q28",
+    "difficulty": "complex",
+    "tag": "structured",
+    "question": "Salespeople with their person name and YTD sales, top 10 by YTD.",
+    "mode": "baseline",
+    "correct": false,
+    "exec_ok": false,
+    "sql": "WITH ytd_sales AS (\n    SELECT\n        h.rep_id,\n        SUM(h.net_amt) AS ytd_amount\n    FROM wh.sls_ord_hdr h\n    JOIN wh.sls_ord_dtl d ON d.ord_id = h.ord_id\n    WHERE h.ord_dt >= DATE_TRUNC('year', CURRENT_DATE)\n      AND h.ord_dt < CURRENT_DATE + INTERVAL '1 day'\n    GROUP BY h.rep_id\n)\nSELECT\n    e.emp_id,\n    e.login_id AS person_name,\n    ys.ytd_amount\nFROM ytd_sales ys\nJOIN wh.sls_rep r ON r.rep_id = ys.rep_id\nJOIN wh.emp_mstr e ON e.emp_id = r.emp_id\nORDER BY ys.ytd_amount DESC\nLIMIT 10",
+    "error": "column r.emp_id does not exist\nLINE 17: JOIN wh.emp_mstr e ON e.emp_id = r.emp_id\n                                          ^\nHINT:  Perhaps you meant to reference the column \"e.emp_id\".\n",
+    "retrieval": null
+  },
+  {
+    "id": "Q29",
+    "difficulty": "complex",
+    "tag": "both",
+    "question": "How many distinct orders included a highly rated product (avg rating >= 4)?",
+    "mode": "baseline",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "WITH high_rated_products AS (\n    SELECT prd_id\n    FROM wh.prd_rev\n    GROUP BY prd_id\n    HAVING AVG(rating_val)::numeric >= 4\n)\nSELECT COUNT(DISTINCT d.ord_id) AS distinct_orders_count\nFROM wh.sls_ord_dtl d\nJOIN high_rated_products h ON d.prd_id = h.prd_id",
+    "error": null,
+    "retrieval": null
+  },
+  {
+    "id": "Q30",
+    "difficulty": "complex",
+    "tag": "both",
+    "question": "Fiscal year 2024 subtotal for orders shipped to cities in the United States.",
+    "mode": "baseline",
+    "correct": false,
+    "exec_ok": false,
+    "sql": "WITH us_shipped_orders AS (\n    SELECT h.ord_id\n    FROM wh.sls_ord_hdr h\n    JOIN wh.addr_mstr a ON h.ship_addr_id = a.addr_id\n    JOIN wh.st_prov s ON a.st_id = s.st_id\n    JOIN wh.ctry_rgn c ON s.ctry_cd = c.ctry_cd\n    WHERE c.ctry_cd = 'US'\n      AND h.order_dt >= DATE '2024-01-01'\n      AND h.order_dt < DATE '2025-01-01'\n)\nSELECT SUM(d.qty * d.unit_prc) AS fy2024_us_subtotal\nFROM wh.sls_ord_dtl d\nJOIN us_shipped_orders o ON d.ord_id = o.ord_id",
+    "error": "column h.order_dt does not exist\nLINE 8:       AND h.order_dt >= DATE '2024-01-01'\n                  ^\nHINT:  Perhaps you meant to reference the column \"h.ord_dt\".\n",
+    "retrieval": null
+  },
+  {
+    "id": "Q01",
+    "difficulty": "simple",
+    "tag": "structured",
+    "question": "How many sales orders are in the system?",
+    "mode": "ontology",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(*) AS sales_order_count\nFROM wh.sls_ord_hdr",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "are",
+        "how",
+        "in",
+        "many",
+        "order",
+        "orders",
+        "sales",
+        "system",
+        "the"
+      ],
+      "expanded_tokens": [
+        "are",
+        "how",
+        "in",
+        "many",
+        "order",
+        "orders",
+        "sales",
+        "system",
+        "the"
+      ],
+      "seed_entities": [
+        "SalesOrder"
+      ],
+      "entity_scores": {
+        "SalesOrder": 55.783
+      },
+      "entities": [
+        "SalesOrder"
+      ],
+      "bridge_entities": [],
+      "rules": [],
+      "metrics": [],
+      "value_meanings_columns": [],
+      "relationships": [
+        "has_lines",
+        "placed_by",
+        "in_territory",
+        "sold_by",
+        "order_reasons",
+        "ship_address"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q02",
+    "difficulty": "simple",
+    "tag": "structured",
+    "question": "How many finished goods products do we sell?",
+    "mode": "ontology",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(*) AS finished_goods_count\nFROM wh.prd_mstr\nWHERE fg_flg = TRUE",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "do",
+        "finished",
+        "goods",
+        "how",
+        "many",
+        "product",
+        "products",
+        "sell",
+        "we"
+      ],
+      "expanded_tokens": [
+        "do",
+        "finished",
+        "goods",
+        "how",
+        "many",
+        "product",
+        "products",
+        "sell",
+        "sellable",
+        "we"
+      ],
+      "seed_entities": [
+        "Product"
+      ],
+      "entity_scores": {
+        "Product": 128.904
+      },
+      "entities": [
+        "Product"
+      ],
+      "bridge_entities": [],
+      "rules": [
+        "finished_goods_only",
+        "active_product"
+      ],
+      "metrics": [],
+      "value_meanings_columns": [
+        "wh.prd_mstr.line_cd",
+        "wh.prd_mstr.fg_flg"
+      ],
+      "relationships": [
+        "line_product",
+        "product_subcategory",
+        "product_model",
+        "product_reviews",
+        "bom_assembly"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q03",
+    "difficulty": "simple",
+    "tag": "structured",
+    "question": "How many customers are there?",
+    "mode": "ontology",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(*) AS customer_count\nFROM wh.cst_mstr",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "are",
+        "customer",
+        "customers",
+        "how",
+        "many",
+        "there"
+      ],
+      "expanded_tokens": [
+        "are",
+        "customer",
+        "customers",
+        "how",
+        "many",
+        "there"
+      ],
+      "seed_entities": [
+        "Customer"
+      ],
+      "entity_scores": {
+        "Customer": 10.505
+      },
+      "entities": [
+        "Customer"
+      ],
+      "bridge_entities": [],
+      "rules": [],
+      "metrics": [],
+      "value_meanings_columns": [
+        "wh.prd_mstr.fg_flg"
+      ],
+      "relationships": [
+        "placed_by",
+        "customer_store",
+        "customer_person"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q04",
+    "difficulty": "simple",
+    "tag": "structured",
+    "question": "List the product category names.",
+    "mode": "ontology",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT cat_nm AS category_name\nFROM wh.prd_cat",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "category",
+        "list",
+        "name",
+        "names",
+        "product",
+        "the"
+      ],
+      "expanded_tokens": [
+        "category",
+        "list",
+        "name",
+        "names",
+        "product",
+        "the"
+      ],
+      "seed_entities": [
+        "ProductCategory",
+        "Product"
+      ],
+      "entity_scores": {
+        "ProductCategory": 57.625,
+        "Product": 23.126,
+        "ProductSubcategory": 0.0
+      },
+      "entities": [
+        "ProductCategory",
+        "Product",
+        "ProductSubcategory"
+      ],
+      "bridge_entities": [
+        "ProductSubcategory"
+      ],
+      "rules": [],
+      "metrics": [],
+      "value_meanings_columns": [
+        "wh.prd_mstr.line_cd"
+      ],
+      "relationships": [
+        "line_product",
+        "product_subcategory",
+        "subcategory_category",
+        "product_model",
+        "product_reviews",
+        "bom_assembly"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q05",
+    "difficulty": "simple",
+    "tag": "structured",
+    "question": "How many employees are currently active?",
+    "mode": "ontology",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(*) AS active_employees\nFROM wh.emp_mstr\nWHERE cur_flg",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "active",
+        "are",
+        "currently",
+        "employee",
+        "employees",
+        "how",
+        "many"
+      ],
+      "expanded_tokens": [
+        "active",
+        "are",
+        "current",
+        "currently",
+        "employee",
+        "employees",
+        "how",
+        "many"
+      ],
+      "seed_entities": [
+        "Employee"
+      ],
+      "entity_scores": {
+        "Employee": 17.778
+      },
+      "entities": [
+        "Employee"
+      ],
+      "bridge_entities": [],
+      "rules": [],
+      "metrics": [],
+      "value_meanings_columns": [],
+      "relationships": [
+        "salesperson_is_employee",
+        "employee_department"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q06",
+    "difficulty": "simple",
+    "tag": "structured",
+    "question": "What is the total number of sales order line items?",
+    "mode": "ontology",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(*) AS total_sales_order_line_items\nFROM wh.sls_ord_dtl",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "is",
+        "item",
+        "items",
+        "line",
+        "number",
+        "of",
+        "order",
+        "sales",
+        "the",
+        "total",
+        "what"
+      ],
+      "expanded_tokens": [
+        "is",
+        "item",
+        "items",
+        "line",
+        "number",
+        "of",
+        "order",
+        "sales",
+        "the",
+        "total",
+        "what"
+      ],
+      "seed_entities": [
+        "SalesOrderLine",
+        "SalesOrder"
+      ],
+      "entity_scores": {
+        "SalesOrderLine": 68.396,
+        "SalesOrder": 55.783
+      },
+      "entities": [
+        "SalesOrderLine",
+        "SalesOrder"
+      ],
+      "bridge_entities": [],
+      "rules": [],
+      "metrics": [],
+      "value_meanings_columns": [],
+      "relationships": [
+        "has_lines",
+        "placed_by",
+        "in_territory",
+        "sold_by",
+        "line_product",
+        "order_reasons",
+        "ship_address"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q07",
+    "difficulty": "simple",
+    "tag": "needs-docs",
+    "question": "How many Mountain line finished goods do we have?",
+    "mode": "ontology",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(*)\nFROM wh.prd_mstr\nWHERE line_cd = 'M'\n  AND fg_flg = TRUE",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "do",
+        "finished",
+        "goods",
+        "have",
+        "how",
+        "line",
+        "many",
+        "mountain",
+        "we"
+      ],
+      "expanded_tokens": [
+        "do",
+        "finished",
+        "goods",
+        "have",
+        "how",
+        "line",
+        "m",
+        "many",
+        "mountain",
+        "product",
+        "products",
+        "sell",
+        "sellable",
+        "specialty",
+        "we"
+      ],
+      "seed_entities": [
+        "Product"
+      ],
+      "entity_scores": {
+        "Product": 144.904
+      },
+      "entities": [
+        "Product"
+      ],
+      "bridge_entities": [],
+      "rules": [
+        "finished_goods_only",
+        "active_product",
+        "store_specialty"
+      ],
+      "metrics": [],
+      "value_meanings_columns": [
+        "wh.prd_mstr.line_cd",
+        "wh.prd_mstr.cls_cd",
+        "wh.prd_mstr.style_cd",
+        "wh.prd_mstr.fg_flg",
+        "wh.str_mstr.demo_xml.Specialty",
+        "wh.str_mstr.demo_xml.BusinessType"
+      ],
+      "relationships": [
+        "line_product",
+        "product_subcategory",
+        "product_model",
+        "product_reviews",
+        "bom_assembly"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q08",
+    "difficulty": "simple",
+    "tag": "needs-docs",
+    "question": "How many internet (online) sales orders are there?",
+    "mode": "ontology",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(*) AS internet_sales_orders_count\nFROM wh.sls_ord_hdr\nWHERE onl_flg = TRUE",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "are",
+        "how",
+        "internet",
+        "many",
+        "online",
+        "order",
+        "orders",
+        "sales",
+        "there"
+      ],
+      "expanded_tokens": [
+        "are",
+        "how",
+        "internet",
+        "many",
+        "online",
+        "order",
+        "orders",
+        "sale",
+        "sales",
+        "there",
+        "web"
+      ],
+      "seed_entities": [
+        "SalesOrder"
+      ],
+      "entity_scores": {
+        "SalesOrder": 106.092
+      },
+      "entities": [
+        "SalesOrder"
+      ],
+      "bridge_entities": [],
+      "rules": [
+        "internet_vs_reseller"
+      ],
+      "metrics": [],
+      "value_meanings_columns": [
+        "wh.sls_ord_hdr.onl_flg"
+      ],
+      "relationships": [
+        "has_lines",
+        "placed_by",
+        "in_territory",
+        "sold_by",
+        "order_reasons",
+        "ship_address"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q09",
+    "difficulty": "simple",
+    "tag": "structured",
+    "question": "How many vendor suppliers are marked active?",
+    "mode": "ontology",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(*) AS active_vendor_count\nFROM wh.vnd_mstr\nWHERE act_flg",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "active",
+        "are",
+        "how",
+        "many",
+        "marked",
+        "supplier",
+        "suppliers",
+        "vendor"
+      ],
+      "expanded_tokens": [
+        "active",
+        "are",
+        "how",
+        "many",
+        "marked",
+        "supplier",
+        "suppliers",
+        "vendor"
+      ],
+      "seed_entities": [
+        "Vendor"
+      ],
+      "entity_scores": {
+        "Vendor": 24.046
+      },
+      "entities": [
+        "Vendor"
+      ],
+      "bridge_entities": [],
+      "rules": [],
+      "metrics": [],
+      "value_meanings_columns": [],
+      "relationships": [
+        "po_vendor"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q10",
+    "difficulty": "simple",
+    "tag": "structured",
+    "question": "How many product reviews exist?",
+    "mode": "ontology",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(rev_id) AS total_product_reviews\nFROM wh.prd_rev",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "exist",
+        "how",
+        "many",
+        "product",
+        "review",
+        "reviews"
+      ],
+      "expanded_tokens": [
+        "exist",
+        "how",
+        "many",
+        "product",
+        "review",
+        "reviews"
+      ],
+      "seed_entities": [
+        "ProductReview"
+      ],
+      "entity_scores": {
+        "ProductReview": 65.004
+      },
+      "entities": [
+        "ProductReview"
+      ],
+      "bridge_entities": [],
+      "rules": [
+        "highly_rated"
+      ],
+      "metrics": [],
+      "value_meanings_columns": [],
+      "relationships": [
+        "product_reviews"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q11",
+    "difficulty": "medium",
+    "tag": "structured",
+    "question": "What is the average list price of finished goods by product category?",
+    "mode": "ontology",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT c.cat_nm AS category,\n       AVG(p.list_prc) AS average_list_price\nFROM wh.prd_mstr p\nJOIN wh.prd_subcat s ON p.subcat_id = s.subcat_id\nJOIN wh.prd_cat c ON s.cat_id = c.cat_id\nWHERE p.fg_flg = TRUE\nGROUP BY c.cat_nm\nORDER BY c.cat_nm",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "average",
+        "by",
+        "category",
+        "finished",
+        "goods",
+        "is",
+        "list",
+        "of",
+        "price",
+        "product",
+        "the",
+        "what"
+      ],
+      "expanded_tokens": [
+        "average",
+        "by",
+        "category",
+        "finished",
+        "goods",
+        "is",
+        "list",
+        "of",
+        "price",
+        "product",
+        "products",
+        "sell",
+        "sellable",
+        "the",
+        "we",
+        "what"
+      ],
+      "seed_entities": [
+        "Product",
+        "ProductCategory"
+      ],
+      "entity_scores": {
+        "Product": 133.821,
+        "ProductCategory": 57.625,
+        "ProductSubcategory": 0.0
+      },
+      "entities": [
+        "Product",
+        "ProductCategory",
+        "ProductSubcategory"
+      ],
+      "bridge_entities": [
+        "ProductSubcategory"
+      ],
+      "rules": [
+        "finished_goods_only",
+        "active_product"
+      ],
+      "metrics": [],
+      "value_meanings_columns": [
+        "wh.prd_mstr.line_cd",
+        "wh.prd_mstr.fg_flg"
+      ],
+      "relationships": [
+        "line_product",
+        "product_subcategory",
+        "subcategory_category",
+        "product_model",
+        "product_reviews",
+        "bom_assembly"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q12",
+    "difficulty": "medium",
+    "tag": "needs-docs",
+    "question": "How many reseller orders versus internet orders are there?",
+    "mode": "ontology",
+    "correct": false,
+    "exec_ok": true,
+    "sql": "SELECT\n    SUM(CASE WHEN onl_flg THEN 1 ELSE 0 END) AS internet_orders,\n    SUM(CASE WHEN NOT onl_flg THEN 1 ELSE 0 END) AS reseller_orders\nFROM wh.sls_ord_hdr",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "are",
+        "how",
+        "internet",
+        "many",
+        "order",
+        "orders",
+        "reseller",
+        "there",
+        "versus"
+      ],
+      "expanded_tokens": [
+        "and",
+        "are",
+        "brick",
+        "channel",
+        "how",
+        "internet",
+        "many",
+        "mortar",
+        "online",
+        "order",
+        "orders",
+        "partner",
+        "reseller",
+        "retail",
+        "sale",
+        "store",
+        "there",
+        "versus",
+        "web"
+      ],
+      "seed_entities": [
+        "SalesOrder",
+        "Store"
+      ],
+      "entity_scores": {
+        "SalesOrder": 72.182,
+        "Store": 37.583,
+        "Customer": 0.0
+      },
+      "entities": [
+        "SalesOrder",
+        "Store",
+        "Customer"
+      ],
+      "bridge_entities": [
+        "Customer"
+      ],
+      "rules": [
+        "internet_vs_reseller"
+      ],
+      "metrics": [],
+      "value_meanings_columns": [
+        "wh.sls_ord_hdr.onl_flg",
+        "wh.str_mstr.demo_xml.BusinessType"
+      ],
+      "relationships": [
+        "has_lines",
+        "placed_by",
+        "in_territory",
+        "sold_by",
+        "customer_store",
+        "customer_person",
+        "order_reasons",
+        "ship_address"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q13",
+    "difficulty": "medium",
+    "tag": "both",
+    "question": "What is total line sales amount for Road products?",
+    "mode": "ontology",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT SUM(d.unit_prc * d.qty * (1 - COALESCE(d.disc_pct, 0))) AS total_line_sales_amount\nFROM wh.sls_ord_dtl d\nJOIN wh.prd_mstr p ON d.prd_id = p.prd_id\nWHERE p.line_cd = 'R'",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "amount",
+        "for",
+        "is",
+        "line",
+        "product",
+        "products",
+        "road",
+        "sales",
+        "total",
+        "what"
+      ],
+      "expanded_tokens": [
+        "amount",
+        "for",
+        "is",
+        "line",
+        "net",
+        "product",
+        "products",
+        "r",
+        "revenue",
+        "road",
+        "sales",
+        "specialty",
+        "total",
+        "what"
+      ],
+      "seed_entities": [
+        "Product",
+        "SalesOrderLine",
+        "Store"
+      ],
+      "entity_scores": {
+        "Product": 37.88,
+        "SalesOrderLine": 22.23,
+        "Store": 19.671,
+        "SalesOrder": 0.0,
+        "Customer": 0.0
+      },
+      "entities": [
+        "Product",
+        "SalesOrderLine",
+        "Store",
+        "SalesOrder",
+        "Customer"
+      ],
+      "bridge_entities": [
+        "Customer",
+        "SalesOrder"
+      ],
+      "rules": [
+        "store_specialty"
+      ],
+      "metrics": [
+        "line_sales_amount"
+      ],
+      "value_meanings_columns": [
+        "wh.prd_mstr.line_cd",
+        "wh.str_mstr.demo_xml.Specialty",
+        "wh.str_mstr.demo_xml.BusinessType"
+      ],
+      "relationships": [
+        "has_lines",
+        "placed_by",
+        "in_territory",
+        "sold_by",
+        "line_product",
+        "customer_store",
+        "customer_person",
+        "product_subcategory",
+        "product_model",
+        "product_reviews",
+        "order_reasons",
+        "ship_address",
+        "bom_assembly"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q14",
+    "difficulty": "medium",
+    "tag": "structured",
+    "question": "Top 5 territories by number of sales orders.",
+    "mode": "ontology",
+    "correct": false,
+    "exec_ok": true,
+    "sql": "SELECT\n    t.terr_id AS territory_id,\n    COUNT(*) AS order_count\nFROM wh.sls_ord_hdr o\nJOIN wh.terr_dim t ON o.terr_id = t.terr_id\nGROUP BY t.terr_id\nORDER BY order_count DESC\nLIMIT 5",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "5",
+        "by",
+        "number",
+        "of",
+        "order",
+        "orders",
+        "sales",
+        "territories",
+        "territory",
+        "top"
+      ],
+      "expanded_tokens": [
+        "5",
+        "by",
+        "number",
+        "of",
+        "order",
+        "orders",
+        "sales",
+        "territories",
+        "territory",
+        "top"
+      ],
+      "seed_entities": [
+        "SalesOrder"
+      ],
+      "entity_scores": {
+        "SalesOrder": 75.657
+      },
+      "entities": [
+        "SalesOrder"
+      ],
+      "bridge_entities": [],
+      "rules": [],
+      "metrics": [],
+      "value_meanings_columns": [
+        "wh.sls_ord_hdr.stat_cd"
+      ],
+      "relationships": [
+        "has_lines",
+        "placed_by",
+        "in_territory",
+        "sold_by",
+        "order_reasons",
+        "ship_address"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q15",
+    "difficulty": "medium",
+    "tag": "needs-docs",
+    "question": "Which products are highly rated (average review score at least 4)?",
+    "mode": "ontology",
+    "correct": false,
+    "exec_ok": true,
+    "sql": "SELECT\n    p.prd_nm AS product_name,\n    p.prd_no AS product_number\nFROM wh.prd_mstr p\nJOIN wh.prd_rev r ON p.prd_id = r.prd_id\nGROUP BY p.prd_id, p.prd_nm, p.prd_no\nHAVING AVG(r.rating_val) >= 4",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "4",
+        "are",
+        "at",
+        "average",
+        "highly",
+        "least",
+        "product",
+        "products",
+        "rated",
+        "review",
+        "score",
+        "which"
+      ],
+      "expanded_tokens": [
+        "4",
+        "are",
+        "at",
+        "average",
+        "high",
+        "highly",
+        "least",
+        "product",
+        "products",
+        "rated",
+        "rating",
+        "review",
+        "score",
+        "top",
+        "which"
+      ],
+      "seed_entities": [
+        "Product",
+        "ProductReview",
+        "PurchaseOrder",
+        "SalesOrder"
+      ],
+      "entity_scores": {
+        "Product": 33.88,
+        "ProductReview": 31.829,
+        "PurchaseOrder": 14.049,
+        "SalesOrder": 14.049,
+        "SalesOrderLine": 0.0
+      },
+      "entities": [
+        "Product",
+        "ProductReview",
+        "PurchaseOrder",
+        "SalesOrder",
+        "SalesOrderLine"
+      ],
+      "bridge_entities": [
+        "SalesOrderLine"
+      ],
+      "rules": [
+        "highly_rated"
+      ],
+      "metrics": [
+        "average_review_score"
+      ],
+      "value_meanings_columns": [
+        "wh.prd_mstr.line_cd",
+        "wh.prd_mstr.cls_cd",
+        "wh.sls_ord_hdr.stat_cd",
+        "wh.po_hdr.stat_cd"
+      ],
+      "relationships": [
+        "has_lines",
+        "placed_by",
+        "in_territory",
+        "sold_by",
+        "line_product",
+        "product_subcategory",
+        "product_model",
+        "product_reviews",
+        "po_vendor",
+        "po_lines",
+        "order_reasons",
+        "ship_address",
+        "bom_assembly"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q16",
+    "difficulty": "medium",
+    "tag": "needs-docs",
+    "question": "How many reseller stores specialize in Mountain bikes?",
+    "mode": "ontology",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(*)\nFROM wh.str_mstr\nWHERE ((xpath('//*[local-name()=\"Specialty\"]/text()', demo_xml::xml))[1])::text = 'Mountain'",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "bike",
+        "bikes",
+        "how",
+        "in",
+        "many",
+        "mountain",
+        "reseller",
+        "specialize",
+        "store",
+        "stores"
+      ],
+      "expanded_tokens": [
+        "and",
+        "bike",
+        "bikes",
+        "brick",
+        "channel",
+        "how",
+        "in",
+        "line",
+        "m",
+        "many",
+        "mortar",
+        "mountain",
+        "partner",
+        "product",
+        "reseller",
+        "retail",
+        "specialize",
+        "specialty",
+        "store",
+        "stores"
+      ],
+      "seed_entities": [
+        "Store",
+        "Product"
+      ],
+      "entity_scores": {
+        "Store": 57.254,
+        "Product": 38.209
+      },
+      "entities": [
+        "Store",
+        "Product"
+      ],
+      "bridge_entities": [],
+      "rules": [
+        "internet_vs_reseller",
+        "store_specialty"
+      ],
+      "metrics": [],
+      "value_meanings_columns": [
+        "wh.prd_mstr.line_cd",
+        "wh.prd_mstr.cls_cd",
+        "wh.prd_mstr.style_cd",
+        "wh.str_mstr.demo_xml.Specialty",
+        "wh.str_mstr.demo_xml.BusinessType"
+      ],
+      "relationships": [
+        "line_product",
+        "customer_store",
+        "product_subcategory",
+        "product_model",
+        "product_reviews",
+        "bom_assembly"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q17",
+    "difficulty": "medium",
+    "tag": "structured",
+    "question": "Average order subtotal for orders that have a salesperson assigned.",
+    "mode": "ontology",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT AVG(h.sub_amt) AS avg_subtotal\nFROM wh.sls_ord_hdr h\nJOIN wh.sls_rep r ON h.rep_id = r.rep_id",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "a",
+        "assigned",
+        "average",
+        "for",
+        "have",
+        "order",
+        "orders",
+        "salesperson",
+        "subtotal",
+        "that"
+      ],
+      "expanded_tokens": [
+        "a",
+        "assigned",
+        "average",
+        "for",
+        "have",
+        "order",
+        "orders",
+        "rep",
+        "sales",
+        "salespeople",
+        "salesperson",
+        "subtotal",
+        "that"
+      ],
+      "seed_entities": [
+        "Salesperson",
+        "SalesOrder",
+        "SalesOrderLine"
+      ],
+      "entity_scores": {
+        "Salesperson": 26.493,
+        "SalesOrder": 25.635,
+        "SalesOrderLine": 16.606
+      },
+      "entities": [
+        "Salesperson",
+        "SalesOrder",
+        "SalesOrderLine"
+      ],
+      "bridge_entities": [],
+      "rules": [],
+      "metrics": [],
+      "value_meanings_columns": [],
+      "relationships": [
+        "has_lines",
+        "placed_by",
+        "in_territory",
+        "sold_by",
+        "line_product",
+        "salesperson_is_employee",
+        "order_reasons",
+        "ship_address"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q18",
+    "difficulty": "medium",
+    "tag": "both",
+    "question": "Count of Touring line finished goods that are still active (no sell end date).",
+    "mode": "ontology",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(*)\nFROM wh.prd_mstr\nWHERE line_cd = 'T'\n  AND fg_flg = TRUE\n  AND sell_start_dt <= CURRENT_DATE\n  AND sell_end_dt IS NULL",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "active",
+        "are",
+        "count",
+        "date",
+        "end",
+        "finished",
+        "goods",
+        "line",
+        "no",
+        "of",
+        "sell",
+        "still",
+        "that",
+        "touring"
+      ],
+      "expanded_tokens": [
+        "active",
+        "are",
+        "count",
+        "date",
+        "end",
+        "finished",
+        "goods",
+        "line",
+        "no",
+        "of",
+        "product",
+        "products",
+        "sell",
+        "sellable",
+        "specialty",
+        "still",
+        "t",
+        "that",
+        "touring",
+        "we"
+      ],
+      "seed_entities": [
+        "Product"
+      ],
+      "entity_scores": {
+        "Product": 142.388
+      },
+      "entities": [
+        "Product"
+      ],
+      "bridge_entities": [],
+      "rules": [
+        "finished_goods_only",
+        "active_product",
+        "store_specialty"
+      ],
+      "metrics": [],
+      "value_meanings_columns": [
+        "wh.prd_mstr.line_cd",
+        "wh.prd_mstr.fg_flg",
+        "wh.str_mstr.demo_xml.Specialty",
+        "wh.str_mstr.demo_xml.BusinessType"
+      ],
+      "relationships": [
+        "line_product",
+        "product_subcategory",
+        "product_model",
+        "product_reviews",
+        "bom_assembly"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q19",
+    "difficulty": "medium",
+    "tag": "structured",
+    "question": "How many purchase orders are complete?",
+    "mode": "ontology",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(*) AS complete_purchase_orders\nFROM wh.po_hdr\nWHERE stat_cd = 4",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "are",
+        "complete",
+        "how",
+        "many",
+        "order",
+        "orders",
+        "purchase"
+      ],
+      "expanded_tokens": [
+        "are",
+        "complete",
+        "finished",
+        "how",
+        "many",
+        "order",
+        "orders",
+        "po",
+        "purchase"
+      ],
+      "seed_entities": [
+        "PurchaseOrder",
+        "Product",
+        "PurchaseOrderLine"
+      ],
+      "entity_scores": {
+        "PurchaseOrder": 59.363,
+        "Product": 30.733,
+        "PurchaseOrderLine": 24.7
+      },
+      "entities": [
+        "PurchaseOrder",
+        "Product",
+        "PurchaseOrderLine"
+      ],
+      "bridge_entities": [],
+      "rules": [
+        "finished_goods_only",
+        "po_status"
+      ],
+      "metrics": [],
+      "value_meanings_columns": [
+        "wh.prd_mstr.fg_flg",
+        "wh.po_hdr.stat_cd"
+      ],
+      "relationships": [
+        "line_product",
+        "product_subcategory",
+        "product_model",
+        "product_reviews",
+        "po_vendor",
+        "po_lines",
+        "bom_assembly"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q20",
+    "difficulty": "medium",
+    "tag": "structured",
+    "question": "Number of customers linked to a store (reseller customers).",
+    "mode": "ontology",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT COUNT(DISTINCT c.cst_id) AS reseller_customer_count\nFROM wh.cst_mstr c\nJOIN wh.str_mstr s ON c.str_id = s.str_id",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "a",
+        "customer",
+        "customers",
+        "linked",
+        "number",
+        "of",
+        "reseller",
+        "store",
+        "to"
+      ],
+      "expanded_tokens": [
+        "a",
+        "and",
+        "brick",
+        "channel",
+        "customer",
+        "customers",
+        "linked",
+        "mortar",
+        "number",
+        "of",
+        "partner",
+        "reseller",
+        "retail",
+        "store",
+        "to"
+      ],
+      "seed_entities": [
+        "Store",
+        "SalesOrder"
+      ],
+      "entity_scores": {
+        "Store": 37.583,
+        "SalesOrder": 18.33,
+        "Customer": 0.0
+      },
+      "entities": [
+        "Store",
+        "SalesOrder",
+        "Customer"
+      ],
+      "bridge_entities": [
+        "Customer"
+      ],
+      "rules": [
+        "internet_vs_reseller"
+      ],
+      "metrics": [],
+      "value_meanings_columns": [
+        "wh.prd_mstr.fg_flg",
+        "wh.sls_ord_hdr.onl_flg",
+        "wh.str_mstr.demo_xml.BusinessType"
+      ],
+      "relationships": [
+        "has_lines",
+        "placed_by",
+        "in_territory",
+        "sold_by",
+        "customer_store",
+        "customer_person",
+        "order_reasons",
+        "ship_address"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q21",
+    "difficulty": "medium",
+    "tag": "both",
+    "question": "Total line sales for High class Mountain products.",
+    "mode": "ontology",
+    "correct": false,
+    "exec_ok": false,
+    "sql": "SELECT SUM(sod.linetotal) AS total_line_sales\nFROM wh.sls_ord_dtl sod\nJOIN wh.prd_mstr p ON sod.prd_id = p.prd_id\nWHERE p.cls_cd = 'H'\n  AND p.line_cd = 'M'",
+    "error": "column sod.linetotal does not exist\nLINE 1: SELECT SUM(sod.linetotal) AS total_line_sales\n                   ^\n",
+    "retrieval": {
+      "question_tokens": [
+        "class",
+        "for",
+        "high",
+        "line",
+        "mountain",
+        "product",
+        "products",
+        "sales",
+        "total"
+      ],
+      "expanded_tokens": [
+        "class",
+        "for",
+        "high",
+        "line",
+        "m",
+        "mountain",
+        "product",
+        "products",
+        "sales",
+        "specialty",
+        "total"
+      ],
+      "seed_entities": [
+        "Product"
+      ],
+      "entity_scores": {
+        "Product": 71.036
+      },
+      "entities": [
+        "Product"
+      ],
+      "bridge_entities": [],
+      "rules": [
+        "highly_rated",
+        "store_specialty"
+      ],
+      "metrics": [],
+      "value_meanings_columns": [
+        "wh.prd_mstr.line_cd",
+        "wh.prd_mstr.cls_cd",
+        "wh.prd_mstr.style_cd",
+        "wh.str_mstr.demo_xml.Specialty",
+        "wh.str_mstr.demo_xml.BusinessType"
+      ],
+      "relationships": [
+        "line_product",
+        "product_subcategory",
+        "product_model",
+        "product_reviews",
+        "bom_assembly"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q22",
+    "difficulty": "medium",
+    "tag": "structured",
+    "question": "Departments with the most current employee assignments.",
+    "mode": "ontology",
+    "correct": false,
+    "exec_ok": true,
+    "sql": "WITH dept_current_counts AS (\n    SELECT\n        d.dept_nm,\n        COUNT(e.emp_id) AS current_emp_cnt\n    FROM wh.emp_mstr e\n    JOIN wh.emp_dept_hist edh\n        ON edh.emp_id = e.emp_id\n       AND edh.end_dt IS NULL\n    JOIN wh.dept_mstr d\n        ON d.dept_id = edh.dept_id\n    WHERE e.cur_flg = TRUE\n    GROUP BY d.dept_nm\n)\nSELECT\n    dept_nm,\n    current_emp_cnt\nFROM dept_current_counts\nWHERE current_emp_cnt = (\n    SELECT MAX(current_emp_cnt) FROM dept_current_counts\n)",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "assignment",
+        "assignments",
+        "current",
+        "department",
+        "departments",
+        "employee",
+        "most",
+        "the",
+        "with"
+      ],
+      "expanded_tokens": [
+        "active",
+        "assignment",
+        "assignments",
+        "current",
+        "currently",
+        "department",
+        "departments",
+        "employee",
+        "most",
+        "the",
+        "with"
+      ],
+      "seed_entities": [
+        "Employee",
+        "Department"
+      ],
+      "entity_scores": {
+        "Employee": 17.778,
+        "Department": 13.712
+      },
+      "entities": [
+        "Employee",
+        "Department"
+      ],
+      "bridge_entities": [],
+      "rules": [],
+      "metrics": [],
+      "value_meanings_columns": [],
+      "relationships": [
+        "salesperson_is_employee",
+        "employee_department"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q23",
+    "difficulty": "complex",
+    "tag": "needs-docs",
+    "question": "What was total order subtotal in fiscal year 2024 (July 1 2023 through June 30 2024)?",
+    "mode": "ontology",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT SUM(sub_amt) AS total_subtotal\nFROM wh.sls_ord_hdr\nWHERE ord_dt >= DATE '2023-07-01'\n  AND ord_dt < DATE '2023-07-01' + INTERVAL '1 year'",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "1",
+        "2023",
+        "2024",
+        "30",
+        "fiscal",
+        "in",
+        "july",
+        "june",
+        "order",
+        "subtotal",
+        "through",
+        "total",
+        "was",
+        "what",
+        "year"
+      ],
+      "expanded_tokens": [
+        "1",
+        "2023",
+        "2024",
+        "30",
+        "calendar",
+        "fiscal",
+        "fy",
+        "in",
+        "july",
+        "june",
+        "order",
+        "subtotal",
+        "through",
+        "total",
+        "was",
+        "what",
+        "year"
+      ],
+      "seed_entities": [
+        "SalesOrder",
+        "PurchaseOrder"
+      ],
+      "entity_scores": {
+        "SalesOrder": 25.159,
+        "PurchaseOrder": 20.644
+      },
+      "entities": [
+        "SalesOrder",
+        "PurchaseOrder"
+      ],
+      "bridge_entities": [],
+      "rules": [
+        "fiscal_year_start"
+      ],
+      "metrics": [],
+      "value_meanings_columns": [
+        "wh.sls_ord_hdr.stat_cd",
+        "wh.po_hdr.stat_cd"
+      ],
+      "relationships": [
+        "has_lines",
+        "placed_by",
+        "in_territory",
+        "sold_by",
+        "po_vendor",
+        "po_lines",
+        "order_reasons",
+        "ship_address"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q24",
+    "difficulty": "complex",
+    "tag": "both",
+    "question": "Compare internet vs reseller line sales amount in fiscal year 2025.",
+    "mode": "ontology",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "WITH fy2025 AS (\n    SELECT\n        h.onl_flg,\n        (d.unit_prc * d.qty * (1 - COALESCE(d.disc_pct, 0))) AS line_sales\n    FROM wh.sls_ord_hdr h\n    JOIN wh.sls_ord_dtl d ON d.ord_id = h.ord_id\n    WHERE h.ord_dt >= DATE '2024-07-01'\n      AND h.ord_dt < DATE '2024-07-01' + INTERVAL '1 year'\n)\nSELECT\n    CASE WHEN onl_flg THEN 'Internet' ELSE 'Reseller' END AS channel,\n    SUM(line_sales) AS line_sales_amount\nFROM fy2025\nGROUP BY onl_flg\nORDER BY onl_flg DESC",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "2025",
+        "amount",
+        "compare",
+        "fiscal",
+        "in",
+        "internet",
+        "line",
+        "reseller",
+        "sales",
+        "vs",
+        "year"
+      ],
+      "expanded_tokens": [
+        "2025",
+        "amount",
+        "and",
+        "brick",
+        "calendar",
+        "channel",
+        "compare",
+        "fiscal",
+        "fy",
+        "in",
+        "internet",
+        "july",
+        "line",
+        "mortar",
+        "net",
+        "online",
+        "order",
+        "partner",
+        "reseller",
+        "retail",
+        "revenue",
+        "sale",
+        "sales",
+        "store",
+        "vs",
+        "web",
+        "year"
+      ],
+      "seed_entities": [
+        "SalesOrder",
+        "Store"
+      ],
+      "entity_scores": {
+        "SalesOrder": 81.042,
+        "Store": 53.254,
+        "Customer": 0.0
+      },
+      "entities": [
+        "SalesOrder",
+        "Store",
+        "Customer"
+      ],
+      "bridge_entities": [
+        "Customer"
+      ],
+      "rules": [
+        "fiscal_year_start",
+        "internet_vs_reseller"
+      ],
+      "metrics": [
+        "line_sales_amount"
+      ],
+      "value_meanings_columns": [
+        "wh.sls_ord_hdr.onl_flg",
+        "wh.str_mstr.demo_xml.BusinessType"
+      ],
+      "relationships": [
+        "has_lines",
+        "placed_by",
+        "in_territory",
+        "sold_by",
+        "customer_store",
+        "customer_person",
+        "order_reasons",
+        "ship_address"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q25",
+    "difficulty": "complex",
+    "tag": "both",
+    "question": "Top 5 Road products by line sales amount.",
+    "mode": "ontology",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "SELECT\n    p.prd_nm AS product_name,\n    SUM(d.unit_prc * d.qty * (1 - COALESCE(d.disc_pct, 0))) AS line_sales_amount\nFROM wh.sls_ord_dtl d\nJOIN wh.prd_mstr p ON d.prd_id = p.prd_id\nWHERE p.line_cd = 'R'\n  AND p.fg_flg = TRUE\nGROUP BY p.prd_nm\nORDER BY line_sales_amount DESC\nLIMIT 5",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "5",
+        "amount",
+        "by",
+        "line",
+        "product",
+        "products",
+        "road",
+        "sales",
+        "top"
+      ],
+      "expanded_tokens": [
+        "5",
+        "amount",
+        "by",
+        "line",
+        "net",
+        "product",
+        "products",
+        "r",
+        "revenue",
+        "road",
+        "sales",
+        "specialty",
+        "top"
+      ],
+      "seed_entities": [
+        "Product",
+        "SalesOrder",
+        "SalesOrderLine",
+        "Store"
+      ],
+      "entity_scores": {
+        "Product": 37.88,
+        "SalesOrder": 24.531,
+        "SalesOrderLine": 22.23,
+        "Store": 19.671,
+        "Customer": 0.0
+      },
+      "entities": [
+        "Product",
+        "SalesOrder",
+        "SalesOrderLine",
+        "Store",
+        "Customer"
+      ],
+      "bridge_entities": [
+        "Customer"
+      ],
+      "rules": [
+        "store_specialty"
+      ],
+      "metrics": [
+        "line_sales_amount"
+      ],
+      "value_meanings_columns": [
+        "wh.prd_mstr.line_cd",
+        "wh.sls_ord_hdr.stat_cd",
+        "wh.str_mstr.demo_xml.Specialty",
+        "wh.str_mstr.demo_xml.BusinessType"
+      ],
+      "relationships": [
+        "has_lines",
+        "placed_by",
+        "in_territory",
+        "sold_by",
+        "line_product",
+        "customer_store",
+        "customer_person",
+        "product_subcategory",
+        "product_model",
+        "product_reviews",
+        "order_reasons",
+        "ship_address",
+        "bom_assembly"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q26",
+    "difficulty": "complex",
+    "tag": "needs-docs",
+    "question": "Average annual sales from the store survey for Road specialty stores.",
+    "mode": "ontology",
+    "correct": false,
+    "exec_ok": false,
+    "sql": "WITH road_stores AS (\n    SELECT\n        str_id,\n        (xpath('//*[local-name()=\"Specialty\"]/text()', demo_xml::xml))[1]::text AS specialty,\n        (xpath('//*[local-name()=\"AnnualSales\"]/text()', demo_xml::xml))[1]::numeric AS annual_sales\n    FROM wh.str_mstr\n)\nSELECT AVG(annual_sales) AS avg_annual_sales\nFROM road_stores\nWHERE specialty = 'Road'",
+    "error": "cannot cast type xml to numeric\nLINE 5: ...-name()=\"AnnualSales\"]/text()', demo_xml::xml))[1]::numeric ...\n                                                             ^\n",
+    "retrieval": {
+      "question_tokens": [
+        "annual",
+        "average",
+        "for",
+        "from",
+        "road",
+        "sales",
+        "specialty",
+        "store",
+        "stores",
+        "survey",
+        "the"
+      ],
+      "expanded_tokens": [
+        "annual",
+        "average",
+        "for",
+        "from",
+        "line",
+        "m",
+        "mountain",
+        "product",
+        "r",
+        "road",
+        "sales",
+        "specialty",
+        "store",
+        "stores",
+        "survey",
+        "t",
+        "the",
+        "touring"
+      ],
+      "seed_entities": [
+        "Product",
+        "Store"
+      ],
+      "entity_scores": {
+        "Product": 61.88,
+        "Store": 52.925
+      },
+      "entities": [
+        "Product",
+        "Store"
+      ],
+      "bridge_entities": [],
+      "rules": [
+        "store_specialty"
+      ],
+      "metrics": [],
+      "value_meanings_columns": [
+        "wh.prd_mstr.line_cd",
+        "wh.prd_mstr.cls_cd",
+        "wh.prd_mstr.style_cd",
+        "wh.str_mstr.demo_xml.Specialty",
+        "wh.str_mstr.demo_xml.BusinessType"
+      ],
+      "relationships": [
+        "line_product",
+        "customer_store",
+        "product_subcategory",
+        "product_model",
+        "product_reviews",
+        "bom_assembly"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q27",
+    "difficulty": "complex",
+    "tag": "both",
+    "question": "For each product line, count finished goods and their average list price.",
+    "mode": "ontology",
+    "correct": false,
+    "exec_ok": true,
+    "sql": "SELECT\n    p.line_cd,\n    COUNT(*) AS finished_goods_cnt,\n    AVG(p.list_prc) AS avg_list_price\nFROM wh.prd_mstr p\nWHERE p.fg_flg = TRUE\nGROUP BY p.line_cd\nORDER BY p.line_cd",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "and",
+        "average",
+        "count",
+        "each",
+        "finished",
+        "for",
+        "goods",
+        "line",
+        "list",
+        "price",
+        "product",
+        "their"
+      ],
+      "expanded_tokens": [
+        "and",
+        "average",
+        "count",
+        "each",
+        "finished",
+        "for",
+        "goods",
+        "line",
+        "list",
+        "price",
+        "product",
+        "products",
+        "sell",
+        "sellable",
+        "their",
+        "we"
+      ],
+      "seed_entities": [
+        "Product"
+      ],
+      "entity_scores": {
+        "Product": 133.821
+      },
+      "entities": [
+        "Product"
+      ],
+      "bridge_entities": [],
+      "rules": [
+        "finished_goods_only",
+        "active_product"
+      ],
+      "metrics": [],
+      "value_meanings_columns": [
+        "wh.prd_mstr.line_cd",
+        "wh.prd_mstr.fg_flg"
+      ],
+      "relationships": [
+        "line_product",
+        "product_subcategory",
+        "product_model",
+        "product_reviews",
+        "bom_assembly"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q28",
+    "difficulty": "complex",
+    "tag": "structured",
+    "question": "Salespeople with their person name and YTD sales, top 10 by YTD.",
+    "mode": "ontology",
+    "correct": false,
+    "exec_ok": false,
+    "sql": "SELECT\n    p.first_nm || ' ' || p.last_nm AS person_name,\n    s.sls_ytd AS ytd_sales\nFROM wh.sls_rep s\nJOIN wh.emp_mstr e ON s.rep_id = e.emp_id\nJOIN wh.pers_mstr p ON e.pers_id = p.pers_id\nORDER BY s.sls_ytd DESC\nLIMIT 10",
+    "error": "column e.pers_id does not exist\nLINE 6: JOIN wh.pers_mstr p ON e.pers_id = p.pers_id\n                               ^\nHINT:  Perhaps you meant to reference the column \"p.pers_id\".\n",
+    "retrieval": {
+      "question_tokens": [
+        "10",
+        "and",
+        "by",
+        "name",
+        "person",
+        "sales",
+        "salespeople",
+        "their",
+        "top",
+        "with",
+        "ytd"
+      ],
+      "expanded_tokens": [
+        "10",
+        "and",
+        "by",
+        "name",
+        "person",
+        "rep",
+        "sales",
+        "salespeople",
+        "salesperson",
+        "their",
+        "top",
+        "with",
+        "ytd"
+      ],
+      "seed_entities": [
+        "Salesperson",
+        "Person"
+      ],
+      "entity_scores": {
+        "Salesperson": 83.06,
+        "Person": 56.254,
+        "Customer": 0.0,
+        "SalesOrder": 0.0
+      },
+      "entities": [
+        "Salesperson",
+        "Person",
+        "Customer",
+        "SalesOrder"
+      ],
+      "bridge_entities": [
+        "Customer",
+        "SalesOrder"
+      ],
+      "rules": [],
+      "metrics": [],
+      "value_meanings_columns": [],
+      "relationships": [
+        "has_lines",
+        "placed_by",
+        "in_territory",
+        "sold_by",
+        "customer_store",
+        "customer_person",
+        "salesperson_is_employee",
+        "order_reasons",
+        "ship_address"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q29",
+    "difficulty": "complex",
+    "tag": "both",
+    "question": "How many distinct orders included a highly rated product (avg rating >= 4)?",
+    "mode": "ontology",
+    "correct": true,
+    "exec_ok": true,
+    "sql": "WITH highly_rated AS (\n    SELECT prd_id\n    FROM wh.prd_rev\n    GROUP BY prd_id\n    HAVING AVG(rating_val) >= 4\n)\nSELECT COUNT(DISTINCT o.ord_id) AS distinct_orders_with_highly_rated_product\nFROM wh.sls_ord_hdr o\nJOIN wh.sls_ord_dtl d ON o.ord_id = d.ord_id\nWHERE d.prd_id IN (SELECT prd_id FROM highly_rated)",
+    "error": null,
+    "retrieval": {
+      "question_tokens": [
+        "4",
+        "a",
+        "avg",
+        "distinct",
+        "highly",
+        "how",
+        "included",
+        "many",
+        "order",
+        "orders",
+        "product",
+        "rated",
+        "rating"
+      ],
+      "expanded_tokens": [
+        "4",
+        "a",
+        "at",
+        "average",
+        "avg",
+        "distinct",
+        "high",
+        "highly",
+        "how",
+        "included",
+        "least",
+        "many",
+        "order",
+        "orders",
+        "product",
+        "rated",
+        "rating",
+        "top"
+      ],
+      "seed_entities": [
+        "Product",
+        "PurchaseOrder",
+        "SalesOrder",
+        "ProductReview"
+      ],
+      "entity_scores": {
+        "Product": 33.88,
+        "PurchaseOrder": 21.795,
+        "SalesOrder": 21.795,
+        "ProductReview": 16.028,
+        "SalesOrderLine": 0.0
+      },
+      "entities": [
+        "Product",
+        "PurchaseOrder",
+        "SalesOrder",
+        "ProductReview",
+        "SalesOrderLine"
+      ],
+      "bridge_entities": [
+        "SalesOrderLine"
+      ],
+      "rules": [
+        "highly_rated"
+      ],
+      "metrics": [
+        "average_order_value"
+      ],
+      "value_meanings_columns": [
+        "wh.prd_mstr.line_cd",
+        "wh.prd_mstr.cls_cd",
+        "wh.sls_ord_hdr.stat_cd",
+        "wh.po_hdr.stat_cd"
+      ],
+      "relationships": [
+        "has_lines",
+        "placed_by",
+        "in_territory",
+        "sold_by",
+        "line_product",
+        "product_subcategory",
+        "product_model",
+        "product_reviews",
+        "po_vendor",
+        "po_lines",
+        "order_reasons",
+        "ship_address",
+        "bom_assembly"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  },
+  {
+    "id": "Q30",
+    "difficulty": "complex",
+    "tag": "both",
+    "question": "Fiscal year 2024 subtotal for orders shipped to cities in the United States.",
+    "mode": "ontology",
+    "correct": false,
+    "exec_ok": false,
+    "sql": "SELECT SUM(soh.ord_tot_amt) AS fy2024_us_subtotal\nFROM wh.sls_ord_hdr soh\nJOIN wh.cust_addr ca ON soh.ship_to_addr_id = ca.addr_id\nJOIN wh.st_prov sp ON ca.state_prov_cd = sp.st_prov_cd\nJOIN wh.ctry_rgn cr ON sp.ctry_cd = cr.ctry_cd\nWHERE cr.ctry_nm = 'United States'\n  AND soh.stat_cd = 5\n  AND soh.ord_dt >= DATE '2023-07-01'\n  AND soh.ord_dt < DATE '2024-07-01'",
+    "error": "relation \"wh.cust_addr\" does not exist\nLINE 3: JOIN wh.cust_addr ca ON soh.ship_to_addr_id = ca.addr_id\n             ^\n",
+    "retrieval": {
+      "question_tokens": [
+        "2024",
+        "cities",
+        "city",
+        "fiscal",
+        "for",
+        "in",
+        "order",
+        "orders",
+        "shipped",
+        "state",
+        "states",
+        "subtotal",
+        "the",
+        "to",
+        "united",
+        "year"
+      ],
+      "expanded_tokens": [
+        "2024",
+        "america",
+        "calendar",
+        "cities",
+        "city",
+        "fiscal",
+        "for",
+        "fy",
+        "in",
+        "july",
+        "order",
+        "orders",
+        "shipped",
+        "state",
+        "states",
+        "subtotal",
+        "the",
+        "to",
+        "united",
+        "us",
+        "usa",
+        "year"
+      ],
+      "seed_entities": [
+        "CountryRegion"
+      ],
+      "entity_scores": {
+        "CountryRegion": 96.728
+      },
+      "entities": [
+        "CountryRegion"
+      ],
+      "bridge_entities": [],
+      "rules": [
+        "fiscal_year_start",
+        "sales_order_status_shipped"
+      ],
+      "metrics": [],
+      "value_meanings_columns": [
+        "wh.sls_ord_hdr.stat_cd"
+      ],
+      "relationships": [
+        "state_country"
+      ],
+      "retrieval_version": "v2_idf"
+    }
+  }
+]

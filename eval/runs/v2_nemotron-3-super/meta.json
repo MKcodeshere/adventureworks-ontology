@@ -1,0 +1,7 @@
+{
+  "model": "nemotron-3-super",
+  "provider": "ollama",
+  "temperature": 0,
+  "retrieval": "v2_idf",
+  "version": "v2"
+}

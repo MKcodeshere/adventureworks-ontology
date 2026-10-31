@@ -203,7 +203,7 @@ _provider_options = [
 # Ollama Cloud is the reliable demo default when OLLAMA_API_KEY is present.
 _default_idx = 0
 if env_get("OLLAMA_API_KEY"):
-    _default_idx = 2  # nemotron-3-super
+    _default_idx = 1  # gpt-oss:120b — Ollama Cloud default
 elif env_get("GEMINI_API_KEY"):
     _default_idx = 0
 elif env_get("OPENAI_API_KEY"):
@@ -234,54 +234,72 @@ if ready:
 else:
     st.sidebar.error(f"Missing credentials: {hint}")
 
-mode_ui = st.sidebar.radio(
-    "Mode",
-    ["Ontology", "Schema-only", "Compare both"],
-    index=0,
-)
 mode_map = {"Ontology": "ontology", "Schema-only": "baseline", "Compare both": "compare"}
+mode_options = ["Ontology", "Schema-only", "Compare both"]
 
 questions = load_questions()
+q_by_id = {q["id"]: q for q in questions}
 q_labels = [
     f"{q['id']} · {q['difficulty']} · {q['tag']} — {q['question'][:60]}"
     for q in questions
 ]
-sample = st.sidebar.selectbox("Sample question", ["(free text)"] + q_labels, index=1)
-selected = None
-if sample != "(free text)":
-    selected = questions[q_labels.index(sample)]
+label_by_id = {q["id"]: lab for q, lab in zip(questions, q_labels)}
+id_by_label = {lab: q["id"] for q, lab in zip(questions, q_labels)}
 
-free = st.sidebar.text_area(
-    "Or type your own question",
-    value="" if selected else "How many internet (online) sales orders are there?",
-    height=90,
-)
-question = (selected["question"] if selected and not free.strip() else free.strip()) or (
-    selected["question"] if selected else ""
-)
-qid = selected["id"] if selected else None
-
-# Deep-link / screenshot helpers: ?qid=Q08&mode=compare&autorun=1
+# Deep-link / screenshot helpers applied to session_state BEFORE widgets
 _qp = st.query_params
 if _qp.get("qid"):
     _want = str(_qp.get("qid")).upper()
-    for q in questions:
-        if q["id"].upper() == _want:
-            selected = q
-            question = q["question"]
-            qid = q["id"]
-            break
+    if _want in q_by_id:
+        st.session_state["sample_label"] = label_by_id[_want]
+        st.session_state["free_text"] = ""
 if _qp.get("mode"):
     _m = str(_qp.get("mode")).lower()
-    if _m in {"ontology", "baseline", "schema", "schema-only"}:
-        mode_ui = "Ontology" if _m == "ontology" else "Schema-only"
+    if _m in {"ontology"}:
+        st.session_state["mode_ui"] = "Ontology"
+    elif _m in {"baseline", "schema", "schema-only"}:
+        st.session_state["mode_ui"] = "Schema-only"
     elif _m in {"compare", "both"}:
-        mode_ui = "Compare both"
+        st.session_state["mode_ui"] = "Compare both"
+
+if "mode_ui" not in st.session_state:
+    st.session_state["mode_ui"] = "Ontology"
+if "sample_label" not in st.session_state:
+    # Default to internet-orders Q08 when present
+    st.session_state["sample_label"] = label_by_id.get(
+        "Q08", q_labels[0] if q_labels else "(free text)"
+    )
+if "free_text" not in st.session_state:
+    st.session_state["free_text"] = ""
+
+mode_ui = st.sidebar.radio("Mode", mode_options, key="mode_ui")
+sample = st.sidebar.selectbox(
+    "Sample question",
+    ["(free text)"] + q_labels,
+    key="sample_label",
+)
+selected = q_by_id[id_by_label[sample]] if sample != "(free text)" else None
 
 if selected:
     st.sidebar.markdown(
         f"{diff_badge(selected['difficulty'])}  {tag_badge(selected['tag'])}"
     )
+
+free = st.sidebar.text_area(
+    "Or type your own question",
+    height=90,
+    key="free_text",
+)
+if selected and not (free or "").strip():
+    question = selected["question"]
+    qid = selected["id"]
+elif (free or "").strip():
+    question = free.strip()
+    qid = selected["id"] if selected and free.strip() == selected["question"] else None
+else:
+    question = selected["question"] if selected else ""
+    qid = selected["id"] if selected else None
+
 _autorun_flag = str(_qp.get("autorun", "")).lower() in {"1", "true", "yes"}
 _autorun_key = f"autorun_done::{_qp.get('qid')}::{_qp.get('mode')}::{provider}"
 autorun = False
@@ -334,35 +352,44 @@ with tab_ask:
 
                 # Step 1
                 with st.expander("Step 1 · Question understanding", expanded=True):
-                    ex = tr.get("expansions") or {}
-                    c1, c2 = st.columns(2)
-                    with c1:
-                        st.markdown("**Question tokens**")
-                        st.write(", ".join(f"`{t}`" for t in (ex.get("question_tokens") or [])[:40]) or "—")
-                    with c2:
-                        st.markdown("**Synonym expansions added**")
-                        st.write(", ".join(f"`{t}`" for t in (ex.get("added_tokens") or [])[:40]) or "_(none)_")
-                    hits = ex.get("synonym_hits") or []
-                    if hits:
-                        st.markdown("**Synonym index hits**")
-                        for h in hits[:12]:
-                            st.markdown(
-                                f"- `{h['key']}` → {', '.join(h['values'][:6])} "
-                                f"(matched: {', '.join(h['matched_tokens'])})"
-                            )
+                    if tr["mode"] != "ontology":
+                        st.markdown("**Schema-only mode** — raw warehouse schema was used (no synonym expansion / ontology slice).")
+                        tables = tr.get("tables") or []
+                        st.markdown("**Tables whose schema hints were included**")
+                        st.write(", ".join(f"`wh.{t}`" for t in tables) or "_(none)_")
+                    else:
+                        ex = tr.get("expansions") or {}
+                        c1, c2 = st.columns(2)
+                        with c1:
+                            st.markdown("**Question tokens**")
+                            st.write(", ".join(f"`{t}`" for t in (ex.get("question_tokens") or [])[:40]) or "—")
+                        with c2:
+                            st.markdown("**Synonym expansions added**")
+                            st.write(", ".join(f"`{t}`" for t in (ex.get("added_tokens") or [])[:40]) or "_(none)_")
+                        hits = ex.get("synonym_hits") or []
+                        if hits:
+                            st.markdown("**Synonym index hits**")
+                            for h in hits[:12]:
+                                st.markdown(
+                                    f"- `{h['key']}` → {', '.join(h['values'][:6])} "
+                                    f"(matched: {', '.join(h['matched_tokens'])})"
+                                )
 
                 # Step 2
                 with st.expander("Step 2 · Ontology retrieval", expanded=(tr["mode"] == "ontology")):
                     if tr["mode"] != "ontology":
-                        st.caption("Schema-only mode: no ontology retrieval. Full schema hints go to the LLM.")
+                        st.caption("Schema-only mode: no ontology retrieval. Schema hints listed in Step 1 go to the LLM.")
                     else:
                         ret = tr.get("retrieval") or {}
-                        st.markdown("**Matched entities → `wh` tables**")
+                        scores = ret.get("entity_scores") or {}
+                        st.markdown("**Matched entities → `wh` tables** (with retrieval scores)")
                         for e in tr.get("entities") or []:
                             role = "seed" if e["name"] in set(ret.get("seed_entities") or []) else (
                                 "bridge" if e["name"] in set(ret.get("bridge_entities") or []) else "related"
                             )
-                            st.markdown(f"- **{e['name']}** → `{e.get('table')}` · _{role}_")
+                            sc = scores.get(e["name"])
+                            sc_s = f" · score **{sc}**" if sc is not None else ""
+                            st.markdown(f"- **{e['name']}** → `{e.get('table')}` · _{role}_{sc_s}")
                         st.markdown("**Multi-hop join paths**")
                         paths = tr.get("paths") or []
                         if paths:

@@ -1,0 +1,7 @@
+{
+  "model": "gpt-oss:120b",
+  "provider": "ollama",
+  "temperature": 0,
+  "retrieval": "v2_idf",
+  "version": "v2"
+}
